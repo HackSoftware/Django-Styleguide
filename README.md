@@ -29,9 +29,10 @@ Expect often updates as we discuss & decide upon different things.
 
 A service is a simple function that:
 
-* Live in `your_app/services.py` module
+* Lives in `your_app/services.py` module
 * Takes keyword-only arguments
 * Is type-annotated (even if you are not using `mypy` at the moment)
+* Works mostly with models & other services and selectors
 * Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
 
 An example service that creates an user:
@@ -53,3 +54,27 @@ def create_user(
 ```
 
 As you can see, this service calls 2 other services - `create_profile` and `send_confirmation_email`
+
+
+## Selectors
+
+A selector is a simple function that:
+
+* Lives in `your_app/selectors.py` module
+* Takes keyword-only arguments
+* Is type-annotated (even if you are not using `mypy` at the moment)
+* Works mostly with models & other services and selectors
+* Does business logic around fetching data from your database
+
+An example selector that list users from the database:
+
+```python
+def get_users(*, fetched_by: User) -> Iterable[User]:
+    user_ids = get_visible_users_for(user=fetched_by)
+
+    query = Q(id__in=user_ids)
+
+    return User.objects.filter(query)
+```
+
+As you can see, `get_visible_users_for` is another selector.
