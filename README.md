@@ -78,3 +78,103 @@ def get_users(*, fetched_by: User) -> Iterable[User]:
 ```
 
 As you can see, `get_visible_users_for` is another selector.
+
+## APIs & Serializers
+
+When using services & selectors, all of your APIs should look simple & the same.
+
+General rules for an API is:
+
+* Do 1 API per operation. For CRUD on a model, this means 4 APIs.
+* Use the most simple `APIView` or `GenericAPIView`
+* Use services / selectors & don't do business logic in your API.
+* Use serializers for fetching objects from params - passed either via `GET` or `POST`
+* Serializer should be nested in the API and be named either `InputSerializer` or `OutputSerializer`
+  * `OutputSerializer` can subclass `ModelSerializer`, if needed.
+  * `InputSerializer` should always be a plain `Serializer`
+  * Reuse serializers as little as possible
+  * If you need a nested serializer, use the `inline_serializer` util
+
+### An example list API
+
+```python
+class CourseListApi(SomeAuthenticationMixin, APIView):
+    class OutputSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Course
+            fields = ('id', 'name', 'start_date', 'end_date')
+
+    def get(self, request):
+        courses = get_courses()
+
+        data = self.OutputSerializer(courses, many=True)
+
+        return Response(data)
+```
+
+### An example detail API
+
+```python
+class CourseDetailApi(SomeAuthenticationMixin, APIView):
+    class OutputSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Course
+            fields = ('id', 'name', 'start_date', 'end_date')
+
+    def get(self, request, course_id):
+        course = get_course(id=course_id)
+
+        data = self.OutputSerializer(course)
+
+        return Response(data)
+```
+
+### An example create API
+
+```python
+class CourseCreateApi(SomeAuthenticationMixin, APIView):
+    class InputSerializer(serializers.Serializer):
+        name = serializers.CharField()
+        start_date = serializers.DateField()
+        end_date = serializers.DateField()
+
+    def post(self, request):
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        create_course(**serializer.validated_data)
+
+        return Response(status=status.HTTP_201_CREATED)
+```
+
+### An example update API
+
+```python
+class CourseUpdateApi(SomeAuthenticationMixin, APIView):
+    class InputSerializer(serializers.Serializer):
+        name = serializers.CharField(required=False)
+        start_date = serializers.DateField(required=False)
+        end_date = serializers.DateField(required=False)
+
+    def post(self, request, course_id):
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        update_course(course_id=course_id, **serializer.validated_data)
+
+        return Response(status=status.HTTP_200_OK)
+```
+
+### Nested serializers
+
+In case you need to use a nested serializer, you can do the following thing:
+
+```python
+class Serializer(serializers.Serializer):
+    weeks = inline_serializer(many=True, fields={
+        'id': serializers.IntegerField(),
+        'number': serializers.IntegerField(),
+    })
+```
+
+The implementation of `inline_serializer` can be found in `utils.py` in this repo.
