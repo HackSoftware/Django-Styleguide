@@ -29,6 +29,7 @@ Expect often updates as we discuss & decide upon different things.
 
 A service is a simple function that:
 
+* Live in `your_app/services.py` module
 * Takes keyword-only arguments
 * Is type-annotated (even if you are not using `mypy` at the moment)
 * Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
