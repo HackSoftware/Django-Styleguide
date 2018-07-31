@@ -4,6 +4,23 @@ Django styleguide used in [HackSoft](https://hacksoft.io) projects.
 
 Expect often updates as we discuss & decide upon different things.
 
+**Table of contents:**
+
+<!-- toc -->
+
+- [Overview](#overview)
+- [Services](#services)
+- [Selectors](#selectors)
+- [APIs & Serializers](#apis--serializers)
+  * [An example list API](#an-example-list-api)
+  * [An example detail API](#an-example-detail-api)
+  * [An example create API](#an-example-create-api)
+  * [An example update API](#an-example-update-api)
+  * [Nested serializers](#nested-serializers)
+- [Inspiration](#inspiration)
+
+<!-- tocstop -->
+
 ## Overview
 
 **In Django, business logic should live in:**
