@@ -47,6 +47,18 @@ Expect often updates as we discuss & decide upon different things.
 * If the model property spans multiple relations, it should better be a selector.
 * If a model property, added to some list API, will cause `N + 1` problem that cannot be easily solved with `select_related`, it should better be a selector.
 
+## Cookie Cutter
+
+We recommend starting every new project with [`cookiecutter-django`](https://github.com/pydanny/cookiecutter-django)
+
+Once this is done, depending on the context, remove everything that's not needed.
+
+The usual list is:
+
+* `allauth`
+* templates
+* Settings for things that are not yet required (always add settings when necessary)
+
 ## Models
 
 Lets take a look at an example model:
