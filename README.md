@@ -178,3 +178,12 @@ class Serializer(serializers.Serializer):
 ```
 
 The implementation of `inline_serializer` can be found in `utils.py` in this repo.
+
+
+## Inspiration
+
+The way we do Django is inspired by the following things:
+
+* The general idea for **separation of concerns**
+* [Boundaries by Gary Bernhardt](https://www.youtube.com/watch?v=yTkzNHF6rMs)
+* Rails service objects
