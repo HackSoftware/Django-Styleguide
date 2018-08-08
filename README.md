@@ -197,6 +197,63 @@ class Serializer(serializers.Serializer):
 The implementation of `inline_serializer` can be found in `utils.py` in this repo.
 
 
+## Exception Handling
+
+### Raising Exceptions in Services
+Now we have a great separation between business logic and HTTP logic. The business logic lives in the services and the HTTP logic lives in the APIs.
+
+In order to keep this separation of concerns our services must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes. 
+Our services must use: `native python exceptions`, `django.core.exceptions` or some custom business exceptions that we define.
+
+Here is a good example of service that preforms some business validation and raise `django.core.exceptions.ValidationError`
+```python
+from django.core.exceptions import ValidationError
+
+def create_topic(*, name: str, course: Course) -> Topic:
+    if Topic.objects.filter(course=course, name=name).exists():
+        raise ValidationError('Topic with this name already exists for this course!')
+
+    topic = Topic.objects.create(name=name, course=course)
+
+    return topic
+```
+
+### Handle Exceptions in APIs
+In order to transform the exceptions raised in the services to a standard HTTP response you need to catch the exception and return proper HTTP response.
+
+The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your exception to DRF exception.
+
+Here is an example:
+
+```python
+class CourseCreateApi(SomeAuthenticationMixin, APIView):
+    expected_exceptions = {
+        ValidationError: serializers.ValidationError,
+        ValueError: serializers.ValidationError,
+    }
+
+    class InputSerializer(serializers.Serializer):
+        ...
+
+    def post(self, request):
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        create_course(**serializer.validated_data)
+
+        return Response(status=status.HTTP_201_CREATED)
+
+    def handle_exception(self, exc):
+        if isinstance(exc, tuple(self.expected_exceptions.keys())):
+            drf_exception_class = self.expected_exceptions[exc.__class__]
+            drf_exception = drf_exception_class()
+
+            return super().handle_exception(drf_exception)
+
+        return super().handle_exception(exc)
+```
+You can move this code to a mixin and use it in every API to prevent code duplication. 
+
 ## Inspiration
 
 The way we do Django is inspired by the following things:
