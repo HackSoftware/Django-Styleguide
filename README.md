@@ -13,6 +13,7 @@ Expect often updates as we discuss & decide upon different things.
   * [Custom validation](#custom-validation)
   * [Properties](#properties)
   * [Methods](#methods)
+  * [Testing](#testing)
 - [Services](#services)
 - [Selectors](#selectors)
 - [APIs & Serializers](#apis--serializers)
@@ -159,6 +160,50 @@ We have few general rules for custom validations & model properties / methods:
 
 * If you need a method that updates several fields at once (for example - `created_at` and `created_by` when something happens), you can create a model method that does the job.
 * Every model method should be wrapped in a service. There should be no model method calling outside a service.
+
+### Testing
+
+Models need to be tested only if there's something additional to them - like custom validation or properties.
+
+If we are strict & don't do custom validation / properties, then we can test the models without actually writing anything to the database => we are going to get quicker tests.
+
+Foe example, if we want to test the custom validation, here's how a test could look like:
+
+```python
+from datetime import timedelta
+
+from django.test import TestCase
+from django.core.exceptions import ValidationError
+
+from odin.common.utils import get_now
+
+from odin.education.factories import CourseFactory
+from odin.education.models import Course
+
+
+class CourseTests(TestCase):
+    def test_course_end_date_cannot_be_before_start_date(self):
+        start_date = get_now()
+        end_date = get_now() - timedelta(days=1)
+
+        course_data = CourseFactory.build()
+        course_data['start_date'] = start_date
+        course_data['end_date'] = end_date
+
+        course = Course(**course_data)
+
+        with self.assertRaises(ValidationError):
+            course.full_clean()
+
+```
+
+There's a lot going on in this test:
+
+* `get_now()` returns a timezone aware datetime.
+* `CourseFactory.build()` will return a dictionary with all required fields for a course to exist.
+* We replace the values for `start_date` and `end_date`.
+* We assert that a validation error is going to be raised if we call `full_clean`.
+* We are not hitting the database at all, since there's no need for that.
 
 ## Services
 
