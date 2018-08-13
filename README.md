@@ -205,6 +205,36 @@ There's a lot going on in this test:
 * We assert that a validation error is going to be raised if we call `full_clean`.
 * We are not hitting the database at all, since there's no need for that.
 
+Here's how `CourseFactory` looks like:
+
+```python
+class CourseFactory(factory.DjangoModelFactory):
+    name = factory.Sequence(lambda n: f'{n}{faker.word()}')
+    start_date = factory.LazyAttribute(
+        lambda _: get_now()
+    )
+    end_date = factory.LazyAttribute(
+        lambda _: get_now() + timedelta(days=30)
+    )
+
+    slug_url = factory.Sequence(lambda n: f'{n}{faker.slug()}')
+
+    repository = factory.LazyAttribute(lambda _: faker.url())
+    video_channel = factory.LazyAttribute(lambda _: faker.url())
+    facebook_group = factory.LazyAttribute(lambda _: faker.url())
+
+    class Meta:
+        model = Course
+
+    @classmethod
+    def _build(cls, model_class, *args, **kwargs):
+        return kwargs
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        return create_course(**kwargs)
+```
+
 ## Services
 
 A service is a simple function that:
