@@ -9,6 +9,7 @@ Expect often updates as we discuss & decide upon different things.
 <!-- toc -->
 
 - [Overview](#overview)
+- [Cookie Cutter](#cookie-cutter)
 - [Models](#models)
   * [Custom validation](#custom-validation)
   * [Properties](#properties)
