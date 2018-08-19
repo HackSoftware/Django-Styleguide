@@ -27,6 +27,10 @@ Expect often updates as we discuss & decide upon different things.
 
 <!-- tocstop -->
 
+## Examples
+
+Most of the examples are taken from HackSoft's Learning Management System - Odin - <https://github.com/HackSoftware/Odin>
+
 ## Overview
 
 **In Django, business logic should live in:**
@@ -180,7 +184,7 @@ Models need to be tested only if there's something additional to them - like cus
 
 If we are strict & don't do custom validation / properties, then we can test the models without actually writing anything to the database => we are going to get quicker tests.
 
-Foe example, if we want to test the custom validation, here's how a test could look like:
+For example, if we want to test the custom validation, here's how a test could look like:
 
 ```python
 from datetime import timedelta
