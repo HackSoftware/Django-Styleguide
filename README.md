@@ -8,6 +8,7 @@ Expect often updates as we discuss & decide upon different things.
 
 <!-- toc -->
 
+- [Examples](#examples)
 - [Overview](#overview)
 - [Cookie Cutter](#cookie-cutter)
 - [Models](#models)
