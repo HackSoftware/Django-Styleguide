@@ -4,7 +4,7 @@
   "description": "Django styleguide used in [HackSoft](https://hacksoft.io) projects.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "prettier --list-different '*.md'"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/HackSoftware/Django-Styleguide#readme",
   "dependencies": {
-    "markdown-toc": "^1.2.0"
+    "markdown-toc": "^1.2.0",
+    "prettier": "^1.15.2"
   }
 }
