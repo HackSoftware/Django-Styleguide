@@ -200,18 +200,20 @@ The implementation of `inline_serializer` can be found in `utils.py` in this rep
 ## Exception Handling
 
 ### Raising Exceptions in Services
-Now we have a great separation between business logic and HTTP logic. The business logic lives in the services and the HTTP logic lives in the APIs.
+
+Now we have separation between our HTTP interface & the core logic of our application.
 
 In order to keep this separation of concerns our services must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes. 
 Our services must use: `native python exceptions`, `django.core.exceptions` or some custom business exceptions that we define.
 
 Here is a good example of service that preforms some business validation and raise `django.core.exceptions.ValidationError`
+
 ```python
 from django.core.exceptions import ValidationError
 
 def create_topic(*, name: str, course: Course) -> Topic:
-    if Topic.objects.filter(course=course, name=name).exists():
-        raise ValidationError('Topic with this name already exists for this course!')
+    if course.end_date < timezone.now():
+       raise ValidationError('You can not create topics for course that has ended!')
 
     topic = Topic.objects.create(name=name, course=course)
 
@@ -219,6 +221,7 @@ def create_topic(*, name: str, course: Course) -> Topic:
 ```
 
 ### Handle Exceptions in APIs
+
 In order to transform the exceptions raised in the services to a standard HTTP response you need to catch the exception and return proper HTTP response.
 
 The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your exception to DRF exception.
