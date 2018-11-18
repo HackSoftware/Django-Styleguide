@@ -12,18 +12,18 @@ Expect often updates as we discuss & decide upon different things.
 - [Overview](#overview)
 - [Cookie Cutter](#cookie-cutter)
 - [Models](#models)
-  * [Custom validation](#custom-validation)
-  * [Properties](#properties)
-  * [Methods](#methods)
-  * [Testing](#testing)
+  - [Custom validation](#custom-validation)
+  - [Properties](#properties)
+  - [Methods](#methods)
+  - [Testing](#testing)
 - [Services](#services)
 - [Selectors](#selectors)
 - [APIs & Serializers](#apis--serializers)
-  * [An example list API](#an-example-list-api)
-  * [An example detail API](#an-example-detail-api)
-  * [An example create API](#an-example-create-api)
-  * [An example update API](#an-example-update-api)
-  * [Nested serializers](#nested-serializers)
+  - [An example list API](#an-example-list-api)
+  - [An example detail API](#an-example-detail-api)
+  - [An example create API](#an-example-create-api)
+  - [An example update API](#an-example-update-api)
+  - [Nested serializers](#nested-serializers)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
@@ -36,22 +36,22 @@ Most of the examples are taken from HackSoft's Learning Management System - Odin
 
 **In Django, business logic should live in:**
 
-* Model properties (with some exceptions).
-* Model `clean` method for additional validations (with some exceptions).
-* Services - functions, that take care of code written to the database.
-* Selectors - functions, that take care of code taken from the database.
+- Model properties (with some exceptions).
+- Model `clean` method for additional validations (with some exceptions).
+- Services - functions, that take care of code written to the database.
+- Selectors - functions, that take care of code taken from the database.
 
 **In Django, business logic should not live in:**
 
-* APIs and Views.
-* Serializers and Forms.
-* Form tags.
-* Model `save` method.
+- APIs and Views.
+- Serializers and Forms.
+- Form tags.
+- Model `save` method.
 
 **Model properties vs selectors:**
 
-* If the model property spans multiple relations, it should better be a selector.
-* If a model property, added to some list API, will cause `N + 1` problem that cannot be easily solved with `select_related`, it should better be a selector.
+- If the model property spans multiple relations, it should better be a selector.
+- If a model property, added to some list API, will cause `N + 1` problem that cannot be easily solved with `select_related`, it should better be a selector.
 
 ## Cookie Cutter
 
@@ -61,9 +61,9 @@ Once this is done, depending on the context, remove everything that's not needed
 
 The usual list is:
 
-* `allauth`
-* templates
-* Settings for things that are not yet required (always add settings when necessary)
+- `allauth`
+- templates
+- Settings for things that are not yet required (always add settings when necessary)
 
 ## Models
 
@@ -151,33 +151,31 @@ Few things to spot here.
 
 **Custom validation:**
 
-* There's a custom model validation, defined in `clean`. This validation uses only model fields and no relations.
-* This requires someone to call `full_clean()` on the model instance. The best place to do that is in the `save()` method of the model. Otherwise people can forget to call `full_clean()` in the respective service.
+- There's a custom model validation, defined in `clean`. This validation uses only model fields and no relations.
+- This requires someone to call `full_clean()` on the model instance. The best place to do that is in the `save()` method of the model. Otherwise people can forget to call `full_clean()` in the respective service.
 
 **Properties:**
 
-* All properties, expect `visible_teachers` work directly on model fields.
-* `visible_teachers` is a great candidate for a **selector**.
+- All properties, expect `visible_teachers` work directly on model fields.
+- `visible_teachers` is a great candidate for a **selector**.
 
 We have few general rules for custom validations & model properties / methods:
 
 ### Custom validation
 
-* If the custom validation depends only on the **non-relational model fields**, define it in `clean` and call `full_clean` in `save`.
-* If the custom validation is more complex & **spans relationships**, do it in the service that creates the model.
-* It's OK to combine both `clean` and additional validation in the `service`.
-
+- If the custom validation depends only on the **non-relational model fields**, define it in `clean` and call `full_clean` in `save`.
+- If the custom validation is more complex & **spans relationships**, do it in the service that creates the model.
+- It's OK to combine both `clean` and additional validation in the `service`.
 
 ### Properties
 
-* If your model properties use only **non-relational model fields**, they are OK to stay as properties.
-* If a property, such as `visible_teachers` starts **spanning relationships**, it's better to define a selector for that.
-
+- If your model properties use only **non-relational model fields**, they are OK to stay as properties.
+- If a property, such as `visible_teachers` starts **spanning relationships**, it's better to define a selector for that.
 
 ### Methods
 
-* If you need a method that updates several fields at once (for example - `created_at` and `created_by` when something happens), you can create a model method that does the job.
-* Every model method should be wrapped in a service. There should be no model method calling outside a service.
+- If you need a method that updates several fields at once (for example - `created_at` and `created_by` when something happens), you can create a model method that does the job.
+- Every model method should be wrapped in a service. There should be no model method calling outside a service.
 
 ### Testing
 
@@ -217,11 +215,11 @@ class CourseTests(TestCase):
 
 There's a lot going on in this test:
 
-* `get_now()` returns a timezone aware datetime.
-* `CourseFactory.build()` will return a dictionary with all required fields for a course to exist.
-* We replace the values for `start_date` and `end_date`.
-* We assert that a validation error is going to be raised if we call `full_clean`.
-* We are not hitting the database at all, since there's no need for that.
+- `get_now()` returns a timezone aware datetime.
+- `CourseFactory.build()` will return a dictionary with all required fields for a course to exist.
+- We replace the values for `start_date` and `end_date`.
+- We assert that a validation error is going to be raised if we call `full_clean`.
+- We are not hitting the database at all, since there's no need for that.
 
 Here's how `CourseFactory` looks like:
 
@@ -257,11 +255,11 @@ class CourseFactory(factory.DjangoModelFactory):
 
 A service is a simple function that:
 
-* Lives in `your_app/services.py` module
-* Takes keyword-only arguments
-* Is type-annotated (even if you are not using `mypy` at the moment)
-* Works mostly with models & other services and selectors
-* Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
+- Lives in `your_app/services.py` module
+- Takes keyword-only arguments
+- Is type-annotated (even if you are not using `mypy` at the moment)
+- Works mostly with models & other services and selectors
+- Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
 
 An example service that creates an user:
 
@@ -283,16 +281,15 @@ def create_user(
 
 As you can see, this service calls 2 other services - `create_profile` and `send_confirmation_email`
 
-
 ## Selectors
 
 A selector is a simple function that:
 
-* Lives in `your_app/selectors.py` module
-* Takes keyword-only arguments
-* Is type-annotated (even if you are not using `mypy` at the moment)
-* Works mostly with models & other services and selectors
-* Does business logic around fetching data from your database
+- Lives in `your_app/selectors.py` module
+- Takes keyword-only arguments
+- Is type-annotated (even if you are not using `mypy` at the moment)
+- Works mostly with models & other services and selectors
+- Does business logic around fetching data from your database
 
 An example selector that list users from the database:
 
@@ -313,15 +310,15 @@ When using services & selectors, all of your APIs should look simple & the same.
 
 General rules for an API is:
 
-* Do 1 API per operation. For CRUD on a model, this means 4 APIs.
-* Use the most simple `APIView` or `GenericAPIView`
-* Use services / selectors & don't do business logic in your API.
-* Use serializers for fetching objects from params - passed either via `GET` or `POST`
-* Serializer should be nested in the API and be named either `InputSerializer` or `OutputSerializer`
-  * `OutputSerializer` can subclass `ModelSerializer`, if needed.
-  * `InputSerializer` should always be a plain `Serializer`
-  * Reuse serializers as little as possible
-  * If you need a nested serializer, use the `inline_serializer` util
+- Do 1 API per operation. For CRUD on a model, this means 4 APIs.
+- Use the most simple `APIView` or `GenericAPIView`
+- Use services / selectors & don't do business logic in your API.
+- Use serializers for fetching objects from params - passed either via `GET` or `POST`
+- Serializer should be nested in the API and be named either `InputSerializer` or `OutputSerializer`
+  - `OutputSerializer` can subclass `ModelSerializer`, if needed.
+  - `InputSerializer` should always be a plain `Serializer`
+  - Reuse serializers as little as possible
+  - If you need a nested serializer, use the `inline_serializer` util
 
 ### An example list API
 
@@ -407,11 +404,10 @@ class Serializer(serializers.Serializer):
 
 The implementation of `inline_serializer` can be found in `utils.py` in this repo.
 
-
 ## Inspiration
 
 The way we do Django is inspired by the following things:
 
-* The general idea for **separation of concerns**
-* [Boundaries by Gary Bernhardt](https://www.youtube.com/watch?v=yTkzNHF6rMs)
-* Rails service objects
+- The general idea for **separation of concerns**
+- [Boundaries by Gary Bernhardt](https://www.youtube.com/watch?v=yTkzNHF6rMs)
+- Rails service objects
