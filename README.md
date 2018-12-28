@@ -202,13 +202,13 @@ The implementation of `inline_serializer` can be found in `utils.py` in this rep
 
 ## Exception Handling
 
-### Raising Exceptions in Services
+### Raising Exceptions in Services / Selectors
 
 Now we have separation between our HTTP interface & the core logic of our application.
 
-In order to keep this separation of concerns, our services must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes. 
+In order to keep this separation of concerns, our services and selectors must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes. 
 
-Our services must use one of:
+Our services and selectors must use one of:
 
 * [Python built-in exceptions](https://docs.python.org/3/library/exceptions.html)
 * Exceptions from `django.core.exceptions`
@@ -230,7 +230,7 @@ def create_topic(*, name: str, course: Course) -> Topic:
 
 ### Handle Exceptions in APIs
 
-In order to transform the exceptions raised in the services to a standard HTTP response you need to catch the exception and return proper HTTP response.
+In order to transform the exceptions raised in the services or selectors, to a standard HTTP response, you need to catch the exception and raise something that the rest framework understands.
 
 The best place to do this is in the `handle_exception` method of the `APIView`.
 
