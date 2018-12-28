@@ -349,6 +349,8 @@ class CourseCreateApi(
         return Response(status=status.HTTP_201_CREATED)
 ```
 
+All of code above can be found in `utils.py` in this repository.
+
 ## Inspiration
 
 The way we do Django is inspired by the following things:
