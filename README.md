@@ -206,17 +206,22 @@ The implementation of `inline_serializer` can be found in `utils.py` in this rep
 
 Now we have separation between our HTTP interface & the core logic of our application.
 
-In order to keep this separation of concerns our services must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes. 
-Our services must use: `native python exceptions`, `django.core.exceptions` or some custom business exceptions that we define.
+In order to keep this separation of concerns, our services must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes. 
 
-Here is a good example of service that preforms some business validation and raise `django.core.exceptions.ValidationError`
+Our services must use one of:
+
+* [Python built-in exceptions](https://docs.python.org/3/library/exceptions.html)
+* Exceptions from `django.core.exceptions`
+* Custom exceptions, inheriting from the ones above.
+
+Here is a good example of service that preforms some validation and raises `django.core.exceptions.ValidationError`:
 
 ```python
 from django.core.exceptions import ValidationError
 
 def create_topic(*, name: str, course: Course) -> Topic:
     if course.end_date < timezone.now():
-       raise ValidationError('You can not create topics for course that has ended!')
+       raise ValidationError('You can not create topics for course that has ended.')
 
     topic = Topic.objects.create(name=name, course=course)
 
@@ -227,15 +232,21 @@ def create_topic(*, name: str, course: Course) -> Topic:
 
 In order to transform the exceptions raised in the services to a standard HTTP response you need to catch the exception and return proper HTTP response.
 
-The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your exception to DRF exception.
+The best place to do this is in the `handle_exception` method of the `APIView`.
+
+There you can map your exception to DRF exception.
 
 Here is an example:
 
 ```python
+from rest_framework import exceptions as rest_exceptions
+
+from django.core.exceptions import ValidationError
+
+
 class CourseCreateApi(SomeAuthenticationMixin, APIView):
     expected_exceptions = {
-        ValidationError: serializers.ValidationError,
-        ValueError: serializers.ValidationError,
+        ValidationError: rest_exceptions.ValidationError
     }
 
     class InputSerializer(serializers.Serializer):
@@ -252,13 +263,91 @@ class CourseCreateApi(SomeAuthenticationMixin, APIView):
     def handle_exception(self, exc):
         if isinstance(exc, tuple(self.expected_exceptions.keys())):
             drf_exception_class = self.expected_exceptions[exc.__class__]
-            drf_exception = drf_exception_class()
+            drf_exception = drf_exception_class(get_error_message(exc))
 
             return super().handle_exception(drf_exception)
 
         return super().handle_exception(exc)
 ```
+
+Here's the implementation of `get_error_message`:
+
+```python
+def get_first_matching_attr(obj, *attrs, default=None):
+    for attr in attrs:
+        if hasattr(obj, attr):
+            return getattr(obj, attr)
+
+    return default
+
+
+def get_error_message(exc):
+    if hasattr(exc, 'message_dict'):
+        return exc.message_dict
+    error_msg = get_first_matching_attr(exc, 'message', 'messages')
+
+    if isinstance(error_msg, list):
+        error_msg = ', '.join(error_msg)
+
+    if error_msg is None:
+        error_msg = str(exc)
+
+    return error_msg
+```
+
 You can move this code to a mixin and use it in every API to prevent code duplication. 
+
+We call this `ExceptionHandlerMixin`. Here's a sample implementation from one of our projects:
+
+```python
+from rest_framework import exceptions as rest_exceptions
+
+from django.core.exceptions import ValidationError
+
+from project.common.utils import get_error_message
+
+
+class ExceptionHandlerMixin:
+    """
+    Mixin that transforms Django and Python exceptions into rest_framework ones.
+    without the mixin, they return 500 status code which is not desired.
+    """
+    expected_exceptions = {
+        ValueError: rest_exceptions.ValidationError,
+        ValidationError: rest_exceptions.ValidationError,
+        PermissionError: rest_exceptions.PermissionDenied
+    }
+
+    def handle_exception(self, exc):
+        if isinstance(exc, tuple(self.expected_exceptions.keys())):
+            drf_exception_class = self.expected_exceptions[exc.__class__]
+            drf_exception = drf_exception_class(get_error_message(exc))
+
+            return super().handle_exception(drf_exception)
+
+        return super().handle_exception(exc)
+```
+
+Having this mixin in mind, our API can be written like that:
+
+```python
+
+class CourseCreateApi(
+  SomeAuthenticationMixin,
+  ExceptionHandlerMixin,
+  APIView
+):
+    class InputSerializer(serializers.Serializer):
+        ...
+
+    def post(self, request):
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        create_course(**serializer.validated_data)
+
+        return Response(status=status.HTTP_201_CREATED)
+```
 
 ## Inspiration
 
