@@ -17,6 +17,9 @@ Expect often updates as we discuss & decide upon different things.
   * [An example create API](#an-example-create-api)
   * [An example update API](#an-example-update-api)
   * [Nested serializers](#nested-serializers)
+- [Exception Handling](#exception-handling)
+  * [Raising Exceptions in Services](#raising-exceptions-in-services)
+  * [Handle Exceptions in APIs](#handle-exceptions-in-apis)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
