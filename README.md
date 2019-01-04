@@ -624,6 +624,91 @@ If we are to split the `utils.py` module into submodules, the same will happen f
 
 We try to match the stucture of our modules with the structure of their respective tests.
 
+### Services
+
+Service tests are the most important tests in the project. Usually, those are the heavier tests with most lines of code.
+
+General rule of thumb for service tests:
+
+* The tests should cover the business logic behind the services in an exhaustive manner.
+* The tests should hit the database - creating & reading from it.
+* The tests should mock async task calls & everything that goes outside the project.
+
+When creating the required state for a given test, one can use a combination of:
+
+* Fakes (We recommend using <https://github.com/joke2k/faker>)
+* Other services, to create the required objects.
+* Special test utility & helper methods.
+* Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
+
+Lets see an example.
+
+This is our service:
+
+```python
+def buy_item(
+    *,
+    item: Item,
+    user: User,
+) -> Payment:
+    if item in get_items_for_user(user=user):
+        raise ValidationError(f'Item {item} already in {user} items.')
+
+    payment = Payment.objects.create(
+        item=item,
+        user=user,
+        successful=False
+    )
+
+    charge_payment.delay(payment_id=payment.id)
+
+    return payment
+```
+
+The service:
+
+* Calls a selector for validation
+* Create ORM object
+* Calls a task
+
+Those are our tests:
+
+```python
+class BuyItemTests(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.item = ItemFactory()
+
+        self.service = buy_item
+
+    @patch('project_name.app_name.services.payments.get_items_for_user')
+    def test_buying_item_that_is_already_bought_fails(self, get_items_for_user_mock):
+        """
+        Since we already have tests for `get_items_for_user`,
+        we can safely mock it here and give it a proper return value.
+        """
+        get_items_for_user_mock.return_value = [self.item]
+
+        with self.assertRaises(ValidationError):
+            self.service(user=self.user, item=self.item)
+
+    @patch('project_name.app_name.services.payments.charge_payment.delay')
+    def test_buying_item_creates_a_payment_and_calls_charge_task(
+        self,
+        charge_payment_mock
+    ):
+        self.assetEqual(0, Payment.objects.count())
+
+        payment = self.service(user=self.user, item=self.item)
+
+        self.assetEqual(1, Payment.objects.count())
+        self.assertEqual(payment, Payment.objects.first())
+
+        self.assertFalse(payment.successful)
+
+        self.assert_called(charge_payment_mock)
+```
+
 ## Inspiration
 
 The way we do Django is inspired by the following things:
