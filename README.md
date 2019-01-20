@@ -695,6 +695,8 @@ class Payment(models.Model):
 
 **This is our selector:**
 
+For implementation of `QuerySetType`, check `types.py`.
+
 ```python
 from django.contrib.auth.models import User
 
