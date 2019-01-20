@@ -627,24 +627,11 @@ If we are to split the `utils.py` module into submodules, the same will happen f
 
 We try to match the stucture of our modules with the structure of their respective tests.
 
-### Services
+### Example
 
-Service tests are the most important tests in the project. Usually, those are the heavier tests with most lines of code.
+We have a demo `django_styleguide` project.
 
-General rule of thumb for service tests:
-
-* The tests should cover the business logic behind the services in an exhaustive manner.
-* The tests should hit the database - creating & reading from it.
-* The tests should mock async task calls & everything that goes outside the project.
-
-When creating the required state for a given test, one can use a combination of:
-
-* Fakes (We recommend using <https://github.com/joke2k/faker>)
-* Other services, to create the required objects.
-* Special test utility & helper methods.
-* Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
-
-Lets see an example. We have a demo `django_styleguide` project with the following models:
+#### Example models
 
 ```python
 import uuid
@@ -693,7 +680,7 @@ class Payment(models.Model):
         return f'Payment for {self.item} / {self.user}'
 ```
 
-**This is our selector:**
+#### Example selectors
 
 For implementation of `QuerySetType`, check `types.py`.
 
@@ -712,7 +699,7 @@ def get_items_for_user(
     return Item.objects.filter(payments__user=user)
 ```
 
-**This is our service:**
+#### Example services
 
 ```python
 from django.contrib.auth.models import User
@@ -740,6 +727,54 @@ def buy_item(
     charge_payment.delay(payment_id=payment.id)
 
     return payment
+```
+
+### Testing services
+
+Service tests are the most important tests in the project. Usually, those are the heavier tests with most lines of code.
+
+General rule of thumb for service tests:
+
+* The tests should cover the business logic behind the services in an exhaustive manner.
+* The tests should hit the database - creating & reading from it.
+* The tests should mock async task calls & everything that goes outside the project.
+
+When creating the required state for a given test, one can use a combination of:
+
+* Fakes (We recommend using <https://github.com/joke2k/faker>)
+* Other services, to create the required objects.
+* Special test utility & helper methods.
+* Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
+
+**Lets take a look at our service from the example:**
+
+```python
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from django_styleguide.payments.selectors import get_items_for_user
+from django_styleguide.payments.models import Item, Payment
+from django_styleguide.payments.tasks import charge_payment
+
+
+def buy_item(
+    *,
+    item: Item,
+    user: User,
+) -> Payment:
+    if item in get_items_for_user(user=user):
+        raise ValidationError(f'Item {item} already in {user} items.')
+
+    payment = Payment.objects.create(
+        item=item,
+        user=user,
+        successful=False
+    )
+
+    charge_payment.delay(payment_id=payment.id)
+
+    return payment
+
 ```
 
 The service:
