@@ -29,7 +29,11 @@ Expect often updates as we discuss & decide upon different things.
   * [Handle Exceptions in APIs](#handle-exceptions-in-apis)
 - [Testing](#testing-1)
   * [Naming conventions](#naming-conventions)
-  * [Services](#services-1)
+  * [Example](#example)
+    + [Example models](#example-models)
+    + [Example selectors](#example-selectors)
+    + [Example services](#example-services)
+  * [Testing services](#testing-services)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
