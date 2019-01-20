@@ -25,8 +25,11 @@ Expect often updates as we discuss & decide upon different things.
   * [An example update API](#an-example-update-api)
   * [Nested serializers](#nested-serializers)
 - [Exception Handling](#exception-handling)
-  * [Raising Exceptions in Services](#raising-exceptions-in-services)
+  * [Raising Exceptions in Services / Selectors](#raising-exceptions-in-services--selectors)
   * [Handle Exceptions in APIs](#handle-exceptions-in-apis)
+- [Testing](#testing-1)
+  * [Naming conventions](#naming-conventions)
+  * [Services](#services-1)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
