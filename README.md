@@ -25,8 +25,15 @@ Expect often updates as we discuss & decide upon different things.
   * [An example update API](#an-example-update-api)
   * [Nested serializers](#nested-serializers)
 - [Exception Handling](#exception-handling)
-  * [Raising Exceptions in Services](#raising-exceptions-in-services)
+  * [Raising Exceptions in Services / Selectors](#raising-exceptions-in-services--selectors)
   * [Handle Exceptions in APIs](#handle-exceptions-in-apis)
+- [Testing](#testing-1)
+  * [Naming conventions](#naming-conventions)
+  * [Example](#example)
+    + [Example models](#example-models)
+    + [Example selectors](#example-selectors)
+    + [Example services](#example-services)
+  * [Testing services](#testing-services)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
@@ -561,6 +568,276 @@ class CourseCreateApi(
 ```
 
 All of code above can be found in `utils.py` in this repository.
+
+## Testing
+
+In our Django projects, we split our tests depending on the type of code they represent.
+
+Meaning, we generally have tests for models, services, selectors & APIs / views.
+
+The file structure usually looks like this:
+
+```
+project_name
+├── app_name
+│   ├── __init__.py
+│   └── tests
+│       ├── __init__.py
+│       ├── models
+│       │   └── test_some_model_name.py
+│       ├── selectors
+│       │   └── test_some_selector_name.pyy
+│       └── services
+│           ├── __init__.py
+│           └── test_some_service_name.py
+└── __init__.py
+```
+
+### Naming conventions
+
+We follow 2 general naming conventions:
+
+* The test file names should be `test_the_name_of_the_thing_that_is_tested.py`
+* The test case shoud be `class TheNameOfTheThingThatIsTestedTests(TestCase):`
+
+For example if we have:
+
+```python
+def a_very_neat_service(*args, **kwargs):
+    pass
+```
+
+We are going to have the following for file name:
+
+```
+project_name/app_name/tests/services/test_a_very_neat_service.py
+```
+
+And the following for test case:
+
+```python
+class AVeryNeatServiceTests(TestCase):
+    pass
+```
+
+For tests of utility functions, we follow a similiar pattern.
+
+For example, if we have `project_name/common/utils.py`, then we are going to have `project_name/common/tests/test_utils.py` and place different test cases in that file.
+
+If we are to split the `utils.py` module into submodules, the same will happen for the tests:
+
+* `project_name/common/utils/files.py`
+* `project_name/common/tests/utils/test_files.py`
+
+We try to match the stucture of our modules with the structure of their respective tests.
+
+### Example
+
+We have a demo `django_styleguide` project.
+
+#### Example models
+
+```python
+import uuid
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+from djmoney.models.fields import MoneyField
+
+
+class Item(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+
+    price = MoneyField(
+        max_digits=14,
+        decimal_places=2,
+        default_currency='EUR'
+    )
+
+    def __str__(self):
+        return f'Item {self.id} / {self.name} / {self.price}'
+
+
+class Payment(models.Model):
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+
+    successful = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f'Payment for {self.item} / {self.user}'
+```
+
+#### Example selectors
+
+For implementation of `QuerySetType`, check `types.py`.
+
+```python
+from django.contrib.auth.models import User
+
+from django_styleguide.common.types import QuerySetType
+
+from django_styleguide.payments.models import Item, Payment
+
+
+def get_items_for_user(
+    *,
+    user: User
+) -> QuerySetType[Item]:
+    return Item.objects.filter(payments__user=user)
+```
+
+#### Example services
+
+```python
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from django_styleguide.payments.selectors import get_items_for_user
+from django_styleguide.payments.models import Item, Payment
+from django_styleguide.payments.tasks import charge_payment
+
+
+def buy_item(
+    *,
+    item: Item,
+    user: User,
+) -> Payment:
+    if item in get_items_for_user(user=user):
+        raise ValidationError(f'Item {item} already in {user} items.')
+
+    payment = Payment.objects.create(
+        item=item,
+        user=user,
+        successful=False
+    )
+
+    charge_payment.delay(payment_id=payment.id)
+
+    return payment
+```
+
+### Testing services
+
+Service tests are the most important tests in the project. Usually, those are the heavier tests with most lines of code.
+
+General rule of thumb for service tests:
+
+* The tests should cover the business logic behind the services in an exhaustive manner.
+* The tests should hit the database - creating & reading from it.
+* The tests should mock async task calls & everything that goes outside the project.
+
+When creating the required state for a given test, one can use a combination of:
+
+* Fakes (We recommend using <https://github.com/joke2k/faker>)
+* Other services, to create the required objects.
+* Special test utility & helper methods.
+* Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
+
+**Lets take a look at our service from the example:**
+
+```python
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from django_styleguide.payments.selectors import get_items_for_user
+from django_styleguide.payments.models import Item, Payment
+from django_styleguide.payments.tasks import charge_payment
+
+
+def buy_item(
+    *,
+    item: Item,
+    user: User,
+) -> Payment:
+    if item in get_items_for_user(user=user):
+        raise ValidationError(f'Item {item} already in {user} items.')
+
+    payment = Payment.objects.create(
+        item=item,
+        user=user,
+        successful=False
+    )
+
+    charge_payment.delay(payment_id=payment.id)
+
+    return payment
+
+```
+
+The service:
+
+* Calls a selector for validation
+* Create ORM object
+* Calls a task
+
+**Those are our tests:**
+
+```python
+from unittest.mock import patch
+
+from django.test import TestCase
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from django_styleguide.payments.services import buy_item
+from django_styleguide.payments.models import Payment, Item
+
+
+class BuyItemTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='Test User')
+        self.item = Item.objects.create(
+            name='Test Item',
+            description='Test Item description',
+            price=10.15
+        )
+
+        self.service = buy_item
+
+    @patch('django_styleguide.payments.services.get_items_for_user')
+    def test_buying_item_that_is_already_bought_fails(self, get_items_for_user_mock):
+        """
+        Since we already have tests for `get_items_for_user`,
+        we can safely mock it here and give it a proper return value.
+        """
+        get_items_for_user_mock.return_value = [self.item]
+
+        with self.assertRaises(ValidationError):
+            self.service(user=self.user, item=self.item)
+
+    @patch('django_styleguide.payments.services.charge_payment.delay')
+    def test_buying_item_creates_a_payment_and_calls_charge_task(
+        self,
+        charge_payment_mock
+    ):
+        self.assertEqual(0, Payment.objects.count())
+
+        payment = self.service(user=self.user, item=self.item)
+
+        self.assertEqual(1, Payment.objects.count())
+        self.assertEqual(payment, Payment.objects.first())
+
+        self.assertFalse(payment.successful)
+
+        charge_payment_mock.assert_called()
+```
 
 ## Inspiration
 
