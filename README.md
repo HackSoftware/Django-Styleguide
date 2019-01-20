@@ -641,11 +641,83 @@ When creating the required state for a given test, one can use a combination of:
 * Special test utility & helper methods.
 * Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
 
-Lets see an example.
-
-This is our service:
+Lets see an example. We have a demo `django_styleguide` project with the following models:
 
 ```python
+import uuid
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+from djmoney.models.fields import MoneyField
+
+
+class Item(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+
+    price = MoneyField(
+        max_digits=14,
+        decimal_places=2,
+        default_currency='EUR'
+    )
+
+    def __str__(self):
+        return f'Item {self.id} / {self.name} / {self.price}'
+
+
+class Payment(models.Model):
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+
+    successful = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f'Payment for {self.item} / {self.user}'
+```
+
+**This is our selector:**
+
+```python
+from django.contrib.auth.models import User
+
+from django_styleguide.common.types import QuerySetType
+
+from django_styleguide.payments.models import Item, Payment
+
+
+def get_items_for_user(
+    *,
+    user: User
+) -> QuerySetType[Item]:
+    return Item.objects.filter(payments__user=user)
+```
+
+**This is our service:**
+
+```python
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from django_styleguide.payments.selectors import get_items_for_user
+from django_styleguide.payments.models import Item, Payment
+from django_styleguide.payments.tasks import charge_payment
+
+
 def buy_item(
     *,
     item: Item,
@@ -671,17 +743,31 @@ The service:
 * Create ORM object
 * Calls a task
 
-Those are our tests:
+**Those are our tests:**
 
 ```python
+from unittest.mock import patch
+
+from django.test import TestCase
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from django_styleguide.payments.services import buy_item
+from django_styleguide.payments.models import Payment, Item
+
+
 class BuyItemTests(TestCase):
     def setUp(self):
-        self.user = UserFactory()
-        self.item = ItemFactory()
+        self.user = User.objects.create_user(username='Test User')
+        self.item = Item.objects.create(
+            name='Test Item',
+            description='Test Item description',
+            price=10.15
+        )
 
         self.service = buy_item
 
-    @patch('project_name.app_name.services.payments.get_items_for_user')
+    @patch('django_styleguide.payments.services.get_items_for_user')
     def test_buying_item_that_is_already_bought_fails(self, get_items_for_user_mock):
         """
         Since we already have tests for `get_items_for_user`,
@@ -692,21 +778,21 @@ class BuyItemTests(TestCase):
         with self.assertRaises(ValidationError):
             self.service(user=self.user, item=self.item)
 
-    @patch('project_name.app_name.services.payments.charge_payment.delay')
+    @patch('django_styleguide.payments.services.charge_payment.delay')
     def test_buying_item_creates_a_payment_and_calls_charge_task(
         self,
         charge_payment_mock
     ):
-        self.assetEqual(0, Payment.objects.count())
+        self.assertEqual(0, Payment.objects.count())
 
         payment = self.service(user=self.user, item=self.item)
 
-        self.assetEqual(1, Payment.objects.count())
+        self.assertEqual(1, Payment.objects.count())
         self.assertEqual(payment, Payment.objects.first())
 
         self.assertFalse(payment.successful)
 
-        self.assert_called(charge_payment_mock)
+        charge_payment_mock.assert_called()
 ```
 
 ## Inspiration
