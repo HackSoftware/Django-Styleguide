@@ -34,7 +34,8 @@ Expect often updates as we discuss & decide upon different things.
     + [Example selectors](#example-selectors)
     + [Example services](#example-services)
   * [Testing services](#testing-services)
-- [Inspiration](#inspiration)
+  * [Testing selectors](#testing-selectors)
+- [Inspiration](#inspiration) 
 
 <!-- tocstop -->
 
@@ -693,7 +694,7 @@ from django.contrib.auth.models import User
 
 from django_styleguide.common.types import QuerySetType
 
-from django_styleguide.payments.models import Item, Payment
+from django_styleguide.payments.models import Item
 
 
 def get_items_for_user(
@@ -749,6 +750,7 @@ When creating the required state for a given test, one can use a combination of:
 * Other services, to create the required objects.
 * Special test utility & helper methods.
 * Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
+* Plain `Model.object.create()` calls, if factories are not yet introduced in the project.
 
 **Lets take a look at our service from the example:**
 
@@ -837,6 +839,77 @@ class BuyItemTests(TestCase):
         self.assertFalse(payment.successful)
 
         charge_payment_mock.assert_called()
+```
+
+### Testing selectors
+
+Testing selectors is also an important part of every project.
+
+Sometimes, the selectors can be really straightforward, and if we have to "cut corners", we can omit those tests. But it the end, it's important to cover our selectors too.
+
+Lets take another look at our example selector:
+
+```python
+from django.contrib.auth.models import User
+
+from django_styleguide.common.types import QuerySetType
+
+from django_styleguide.payments.models import Item
+
+
+def get_items_for_user(
+    *,
+    user: User
+) -> QuerySetType[Item]:
+    return Item.objects.filter(payments__user=user)
+```
+
+As you can see, this is a very straighforward & simple selector. We can easily cover that with 2 to 3 tests.
+
+**Here are the tests:**
+
+```python
+from django.test import TestCase
+from django.contrib.auth.models import User
+
+from django_styleguide.payments.selectors import get_items_for_user
+from django_styleguide.payments.models import Item, Payment
+
+
+class GetItemsForUserTests(TestCase):
+    def test_selector_returns_nothing_for_user_without_items(self):
+        """
+        This is a "corner case" test.
+        We should get nothing if the user has no items.
+        """
+        user = User.objects.create_user(username='Test User')
+
+        expected = []
+        result = list(get_items_for_user(user=user))
+
+        self.assertEqual(expected, result)
+
+    def test_selector_returns_item_for_user_with_that_item(self):
+        """
+        This test will fail in case we change the model structure.
+        """
+        user = User.objects.create_user(username='Test User')
+
+        item = Item.objects.create(
+            name='Test Item',
+            description='Test Item description',
+            price=10.15
+        )
+
+        Payment.objects.create(
+            item=item,
+            user=user
+        )
+
+        expected = [item]
+        result = list(get_items_for_user(user=user))
+
+        self.assertEqual(expected, result)
 ```
 
 ## Inspiration
