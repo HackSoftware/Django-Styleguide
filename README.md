@@ -34,7 +34,8 @@ Expect often updates as we discuss & decide upon different things.
     + [Example selectors](#example-selectors)
     + [Example services](#example-services)
   * [Testing services](#testing-services)
-- [Inspiration](#inspiration)
+  * [Testing selectors](#testing-selectors)
+- [Inspiration](#inspiration) 
 
 <!-- tocstop -->
 
