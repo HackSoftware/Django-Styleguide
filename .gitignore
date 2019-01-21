@@ -71,3 +71,5 @@ typings/
 
 # Serverless directories
 .serverless
+
+__pycache__/
