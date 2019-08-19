@@ -587,7 +587,7 @@ project_name
 │       ├── models
 │       │   └── test_some_model_name.py
 │       ├── selectors
-│       │   └── test_some_selector_name.pyy
+│       │   └── test_some_selector_name.py
 │       └── services
 │           ├── __init__.py
 │           └── test_some_service_name.py
@@ -786,7 +786,7 @@ def buy_item(
 The service:
 
 * Calls a selector for validation
-* Create ORM object
+* Creates ORM object
 * Calls a task
 
 **Those are our tests:**
