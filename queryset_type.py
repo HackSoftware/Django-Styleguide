@@ -1,4 +1,13 @@
-from typing import Generic, Iterator, Any, TypeVar, Optional, Dict, Tuple
+from typing import (
+    Generic,
+    Iterator,
+    Any,
+    TypeVar,
+    Optional,
+    Dict,
+    Tuple,
+    Union
+)
 from collections import Iterable
 
 
@@ -44,6 +53,19 @@ class QuerySetType(Generic[DjangoModel], extra=Iterable):
 
     def values_list(self, *args: Any) -> 'QuerySetType[DjangoModel]': ...
 
-    def __getitem__(self, index: int) -> DjangoModel: ...
+    def __getitem__(
+        self,
+        index: int
+    ) -> Union[DjangoModel, "QuerySetType[DjangoModel]"]: ...
 
     def __len__(self) -> int: ...
+
+    def __or__(
+        self,
+        qs: "QuerySetType[DjangoModel]"
+    ) -> 'QuerySetType[DjangoModel]': ...
+
+    def __and__(
+        self,
+        qs: "QuerySetType[DjangoModel]"
+    ) -> 'QuerySetType[DjangoModel]': ...
