@@ -61,15 +61,9 @@ Expect often updates as we discuss & decide upon different things.
 
 ## Cookie Cutter
 
-We recommend starting every new project with [`cookiecutter-django`](https://github.com/pydanny/cookiecutter-django)
+We recommend starting every new project with some kind of cookiecutter. Having the proper structure from the start pays off.
 
-Once this is done, depending on the context, remove everything that's not needed.
-
-The usual list is:
-
-* `allauth`
-* templates
-* Settings for things that are not yet required (always add settings when necessary)
+For example, you can use [`cookiecutter-django`](https://github.com/pydanny/cookiecutter-django)
 
 ## Models
 
