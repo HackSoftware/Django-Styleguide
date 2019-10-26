@@ -8,7 +8,6 @@ Expect often updates as we discuss & decide upon different things.
 
 <!-- toc -->
 
-- [Examples](#examples)
 - [Overview](#overview)
 - [Cookie Cutter](#cookie-cutter)
 - [Models](#models)
@@ -38,10 +37,6 @@ Expect often updates as we discuss & decide upon different things.
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
-
-## Examples
-
-Most of the examples are taken from HackSoft's Learning Management System - Odin - <https://github.com/HackSoftware/Odin>
 
 ## Overview
 
