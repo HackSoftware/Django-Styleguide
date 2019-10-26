@@ -1,5 +1,8 @@
 {
   "name": "django-styleguide",
+  "engines": {
+    "node": "10.16"
+  },
   "version": "1.0.0",
   "description": "Django styleguide used in [HackSoft](https://hacksoft.io) projects.",
   "main": "index.js",
