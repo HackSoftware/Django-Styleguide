@@ -167,6 +167,7 @@ We have few general rules for custom validations & model properties / methods:
 * If the custom validation depends only on the **non-relational model fields**, define it in `clean` and call `full_clean` in `save`.
 * If the custom validation is more complex & **spans relationships**, do it in the service that creates the model.
 * It's OK to combine both `clean` and additional validation in the `service`.
+* As proposed in [this issue](https://github.com/HackSoftware/Django-Styleguide/issues/22), if you can do a validation using [Django's constraints](https://docs.djangoproject.com/en/2.2/ref/models/constraints/), then you should aim for that. Less code to write.
 
 
 ### Properties
