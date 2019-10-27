@@ -335,9 +335,9 @@ class CourseListApi(SomeAuthenticationMixin, APIView):
     def get(self, request):
         courses = get_courses()
 
-        data = self.OutputSerializer(courses, many=True)
+        serializer = self.OutputSerializer(courses, many=True)
 
-        return Response(data)
+        return Response(serializer.data)
 ```
 
 ### An example detail API
@@ -352,9 +352,9 @@ class CourseDetailApi(SomeAuthenticationMixin, APIView):
     def get(self, request, course_id):
         course = get_course(id=course_id)
 
-        data = self.OutputSerializer(course)
+        serializer = self.OutputSerializer(course)
 
-        return Response(data)
+        return Response(serializer.data)
 ```
 
 ### An example create API
