@@ -335,9 +335,9 @@ class CourseListApi(SomeAuthenticationMixin, APIView):
     def get(self, request):
         courses = get_courses()
 
-        data = self.OutputSerializer(courses, many=True)
+        serializer = self.OutputSerializer(courses, many=True)
 
-        return Response(data)
+        return Response(serializer.data)
 ```
 
 ### An example detail API
@@ -352,9 +352,9 @@ class CourseDetailApi(SomeAuthenticationMixin, APIView):
     def get(self, request, course_id):
         course = get_course(id=course_id)
 
-        data = self.OutputSerializer(course)
+        serializer = self.OutputSerializer(course)
 
-        return Response(data)
+        return Response(serializer.data)
 ```
 
 ### An example create API
@@ -414,7 +414,7 @@ The implementation of `inline_serializer` can be found in `utils.py` in this rep
 
 Now we have separation between our HTTP interface & the core logic of our application.
 
-In order to keep this separation of concerns, our services and selectors must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes. 
+In order to keep this separation of concerns, our services and selectors must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes.
 
 Our services and selectors must use one of:
 
@@ -503,7 +503,7 @@ def get_error_message(exc):
     return error_msg
 ```
 
-You can move this code to a mixin and use it in every API to prevent code duplication. 
+You can move this code to a mixin and use it in every API to prevent code duplication.
 
 We call this `ExceptionHandlerMixin`. Here's a sample implementation from one of our projects:
 
