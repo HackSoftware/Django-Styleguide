@@ -23,6 +23,7 @@ Expect often updates as we discuss & decide upon different things.
   * [An example create API](#an-example-create-api)
   * [An example update API](#an-example-update-api)
   * [Nested serializers](#nested-serializers)
+- [Urls](#urls)
 - [Exception Handling](#exception-handling)
   * [Raising Exceptions in Services / Selectors](#raising-exceptions-in-services--selectors)
   * [Handle Exceptions in APIs](#handle-exceptions-in-apis)
@@ -406,6 +407,44 @@ class Serializer(serializers.Serializer):
 
 The implementation of `inline_serializer` can be found in `utils.py` in this repo.
 
+## Urls
+
+We usually organize our urls the same way we organize our APIs - 1 url per API, meaning 1 url per action.
+
+A general rule of thumb is to split urls from different domains in their own `domain_patterns` list & include from `urlpatterns`.
+
+Here's an example with the APIs from above:
+
+```python
+from django.urls import path, include
+
+from project.education.apis import (
+    CourseCreateApi,
+    CourseUpdateApi,
+    CourseListApi,
+    CourseDetailApi,
+    CourseSpecificActionApi,
+)
+
+
+course_patterns = [
+    path('', CourseListApi.as_view(), name='list'),
+    path('<int:course_id>/', CourseDetailApi.as_view(), name='detail'),
+    path('create/', CourseCreateApi.as_view(), name='create'),
+    path('<int:course_id>/update/', CourseUpdateApi.as_view(), name='update'),
+    path(
+        '<int:course_id>/specific-action/',
+        CourseSpecificActionApi.as_view(),
+        name='specific-action'
+    ),
+]
+
+urlpatterns = [
+    path('courses/', include((course_patterns, 'courses'))),
+]
+```
+
+**Splitting urls like that can give you the extra flexibility to move separate domain patterns to separate modules**, especially for really big projects, where you'll often have merge conflicts in `urls.py`.
 
 ## Exception Handling
 
