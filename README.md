@@ -193,10 +193,10 @@ from datetime import timedelta
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
-from odin.common.utils import get_now
+from project.common.utils import get_now
 
-from odin.education.factories import CourseFactory
-from odin.education.models import Course
+from project.education.factories import CourseFactory
+from project.education.models import Course
 
 
 class CourseTests(TestCase):
