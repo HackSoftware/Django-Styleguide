@@ -193,10 +193,10 @@ from datetime import timedelta
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
-from odin.common.utils import get_now
+from project.common.utils import get_now
 
-from odin.education.factories import CourseFactory
-from odin.education.models import Course
+from project.education.factories import CourseFactory
+from project.education.models import Course
 
 
 class CourseTests(TestCase):
@@ -212,7 +212,6 @@ class CourseTests(TestCase):
 
         with self.assertRaises(ValidationError):
             course.full_clean()
-
 ```
 
 There's a lot going on in this test:
@@ -427,6 +426,7 @@ Here is a good example of service that preforms some validation and raises `djan
 ```python
 from django.core.exceptions import ValidationError
 
+
 def create_topic(*, name: str, course: Course) -> Topic:
     if course.end_date < timezone.now():
        raise ValidationError('You can not create topics for course that has ended.')
@@ -540,9 +540,9 @@ Having this mixin in mind, our API can be written like that:
 
 ```python
 class CourseCreateApi(
-  SomeAuthenticationMixin,
-  ExceptionHandlerMixin,
-  APIView
+    SomeAuthenticationMixin,
+    ExceptionHandlerMixin,
+    APIView
 ):
     class InputSerializer(serializers.Serializer):
         ...
