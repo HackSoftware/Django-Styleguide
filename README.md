@@ -440,9 +440,9 @@ def create_topic(*, name: str, course: Course) -> Topic:
 
 In order to transform the exceptions raised in the services or selectors, to a standard HTTP response, you need to catch the exception and raise something that the rest framework understands.
 
-The best place to do this is in the `handle_exception` method of the `APIView`.
+The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your exception to a DRF exception.
 
-There you can map your exception to DRF exception.
+[By default, the `handle_exception` method implementation in DRF](https://www.django-rest-framework.org/api-guide/exceptions/#exception-handling-in-rest-framework-views) handles the Django's built-in `Http404` and `PermissionDenied` exceptions, thus there is no need for you to handle it by hand.
 
 Here is an example:
 
@@ -539,7 +539,6 @@ class ExceptionHandlerMixin:
 Having this mixin in mind, our API can be written like that:
 
 ```python
-
 class CourseCreateApi(
   SomeAuthenticationMixin,
   ExceptionHandlerMixin,
