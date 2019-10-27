@@ -444,6 +444,8 @@ urlpatterns = [
 ]
 ```
 
+**Splitting urls like that can give you the extra flexibility to move separate domain patterns to separate modules**, especially for really big projects, where you'll often have merge conflicts in `urls.py`.
+
 ## Exception Handling
 
 ### Raising Exceptions in Services / Selectors
