@@ -44,8 +44,8 @@ Expect often updates as we discuss & decide upon different things.
 
 * Model properties (with some exceptions).
 * Model `clean` method for additional validations (with some exceptions).
-* Services - functions, that take care of code written to the database.
-* Selectors - functions, that take care of code taken from the database.
+* Services - functions, that take care of writing to the database.
+* Selectors - functions, that take care of fetching from the database.
 
 **In Django, business logic should not live in:**
 
@@ -308,7 +308,7 @@ As you can see, `get_visible_users_for` is another selector.
 
 ## APIs & Serializers
 
-When using services & selectors, all of your APIs should look simple & the same.
+When using services & selectors, all of your APIs should look simple & identical.
 
 General rules for an API is:
 
@@ -440,9 +440,9 @@ def create_topic(*, name: str, course: Course) -> Topic:
 
 In order to transform the exceptions raised in the services or selectors, to a standard HTTP response, you need to catch the exception and raise something that the rest framework understands.
 
-The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your exception to a DRF exception.
+The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your Python/Django exception to a DRF exception.
 
-[By default, the `handle_exception` method implementation in DRF](https://www.django-rest-framework.org/api-guide/exceptions/#exception-handling-in-rest-framework-views) handles the Django's built-in `Http404` and `PermissionDenied` exceptions, thus there is no need for you to handle it by hand.
+By default, the [`handle_exception` method implementation in DRF](https://www.django-rest-framework.org/api-guide/exceptions/#exception-handling-in-rest-framework-views) handles the Django's built-in `Http404` and `PermissionDenied` exceptions, thus there is no need for you to handle it by hand.
 
 Here is an example:
 
@@ -518,7 +518,7 @@ from project.common.utils import get_error_message
 class ExceptionHandlerMixin:
     """
     Mixin that transforms Django and Python exceptions into rest_framework ones.
-    without the mixin, they return 500 status code which is not desired.
+    Without the mixin, they return 500 status code which is not desired.
     """
     expected_exceptions = {
         ValueError: rest_exceptions.ValidationError,
