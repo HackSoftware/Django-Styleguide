@@ -258,7 +258,7 @@ A service is a simple function that:
 
 * Lives in `your_app/services.py` module
 * Takes keyword-only arguments
-* Is type-annotated (even if you are not using `mypy` at the moment)
+* Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment)
 * Works mostly with models & other services and selectors
 * Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
 
@@ -289,11 +289,11 @@ A selector is a simple function that:
 
 * Lives in `your_app/selectors.py` module
 * Takes keyword-only arguments
-* Is type-annotated (even if you are not using `mypy` at the moment)
+* Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment)
 * Works mostly with models & other services and selectors
 * Does business logic around fetching data from your database
 
-An example selector that list users from the database:
+An example selector that lists users from the database:
 
 ```python
 def get_users(*, fetched_by: User) -> Iterable[User]:
@@ -734,11 +734,11 @@ General rule of thumb for service tests:
 
 When creating the required state for a given test, one can use a combination of:
 
-* Fakes (We recommend using <https://github.com/joke2k/faker>)
+* Fakes (We recommend using [`faker`](https://github.com/joke2k/faker))
 * Other services, to create the required objects.
 * Special test utility & helper methods.
 * Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
-* Plain `Model.object.create()` calls, if factories are not yet introduced in the project.
+* Plain `Model.objects.create()` calls, if factories are not yet introduced in the project.
 
 **Lets take a look at our service from the example:**
 
