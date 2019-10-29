@@ -45,8 +45,8 @@ Expect often updates as we discuss & decide upon different things.
 
 * Model properties (with some exceptions).
 * Model `clean` method for additional validations (with some exceptions).
-* Services - functions, that take care of code written to the database.
-* Selectors - functions, that take care of code taken from the database.
+* Services - functions, that take care of writing to the database.
+* Selectors - functions, that take care of fetching from the database.
 
 **In Django, business logic should not live in:**
 
@@ -152,12 +152,12 @@ Few things to spot here.
 
 **Custom validation:**
 
-* There's a custom model validation, defined in `clean`. This validation uses only model fields and no relations.
+* There's a custom model validation, defined in `clean()`. This validation uses only model fields and spans no relations.
 * This requires someone to call `full_clean()` on the model instance. The best place to do that is in the `save()` method of the model. Otherwise people can forget to call `full_clean()` in the respective service.
 
 **Properties:**
 
-* All properties, expect `visible_teachers` work directly on model fields.
+* All properties, except `visible_teachers`, work directly on model fields.
 * `visible_teachers` is a great candidate for a **selector**.
 
 We have few general rules for custom validations & model properties / methods:
@@ -260,7 +260,7 @@ A service is a simple function that:
 
 * Lives in `your_app/services.py` module
 * Takes keyword-only arguments
-* Is type-annotated (even if you are not using `mypy` at the moment)
+* Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment)
 * Works mostly with models & other services and selectors
 * Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
 
@@ -291,11 +291,11 @@ A selector is a simple function that:
 
 * Lives in `your_app/selectors.py` module
 * Takes keyword-only arguments
-* Is type-annotated (even if you are not using `mypy` at the moment)
+* Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment)
 * Works mostly with models & other services and selectors
 * Does business logic around fetching data from your database
 
-An example selector that list users from the database:
+An example selector that lists users from the database:
 
 ```python
 def get_users(*, fetched_by: User) -> Iterable[User]:
@@ -310,7 +310,7 @@ As you can see, `get_visible_users_for` is another selector.
 
 ## APIs & Serializers
 
-When using services & selectors, all of your APIs should look simple & the same.
+When using services & selectors, all of your APIs should look simple & identical.
 
 General rules for an API is:
 
@@ -461,7 +461,7 @@ Our services and selectors must use one of:
 * Exceptions from `django.core.exceptions`
 * Custom exceptions, inheriting from the ones above.
 
-Here is a good example of service that preforms some validation and raises `django.core.exceptions.ValidationError`:
+Here is a good example of service that performs some validation and raises `django.core.exceptions.ValidationError`:
 
 ```python
 from django.core.exceptions import ValidationError
@@ -480,9 +480,9 @@ def create_topic(*, name: str, course: Course) -> Topic:
 
 In order to transform the exceptions raised in the services or selectors, to a standard HTTP response, you need to catch the exception and raise something that the rest framework understands.
 
-The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your exception to a DRF exception.
+The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your Python/Django exception to a DRF exception.
 
-[By default, the `handle_exception` method implementation in DRF](https://www.django-rest-framework.org/api-guide/exceptions/#exception-handling-in-rest-framework-views) handles the Django's built-in `Http404` and `PermissionDenied` exceptions, thus there is no need for you to handle it by hand.
+By default, the [`handle_exception` method implementation in DRF](https://www.django-rest-framework.org/api-guide/exceptions/#exception-handling-in-rest-framework-views) handles the Django's built-in `Http404` and `PermissionDenied` exceptions, thus there is no need for you to handle it by hand.
 
 Here is an example:
 
@@ -558,7 +558,7 @@ from project.common.utils import get_error_message
 class ExceptionHandlerMixin:
     """
     Mixin that transforms Django and Python exceptions into rest_framework ones.
-    without the mixin, they return 500 status code which is not desired.
+    Without the mixin, they return 500 status code which is not desired.
     """
     expected_exceptions = {
         ValueError: rest_exceptions.ValidationError,
@@ -774,11 +774,11 @@ General rule of thumb for service tests:
 
 When creating the required state for a given test, one can use a combination of:
 
-* Fakes (We recommend using <https://github.com/joke2k/faker>)
+* Fakes (We recommend using [`faker`](https://github.com/joke2k/faker))
 * Other services, to create the required objects.
 * Special test utility & helper methods.
 * Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
-* Plain `Model.object.create()` calls, if factories are not yet introduced in the project.
+* Plain `Model.objects.create()` calls, if factories are not yet introduced in the project.
 
 **Lets take a look at our service from the example:**
 
@@ -892,7 +892,7 @@ def get_items_for_user(
     return Item.objects.filter(payments__user=user)
 ```
 
-As you can see, this is a very straighforward & simple selector. We can easily cover that with 2 to 3 tests.
+As you can see, this is a very straightforward & simple selector. We can easily cover that with 2 to 3 tests.
 
 **Here are the tests:**
 
