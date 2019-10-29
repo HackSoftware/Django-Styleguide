@@ -151,12 +151,12 @@ Few things to spot here.
 
 **Custom validation:**
 
-* There's a custom model validation, defined in `clean`. This validation uses only model fields and no relations.
+* There's a custom model validation, defined in `clean()`. This validation uses only model fields and spans no relations.
 * This requires someone to call `full_clean()` on the model instance. The best place to do that is in the `save()` method of the model. Otherwise people can forget to call `full_clean()` in the respective service.
 
 **Properties:**
 
-* All properties, expect `visible_teachers` work directly on model fields.
+* All properties, except `visible_teachers`, work directly on model fields.
 * `visible_teachers` is a great candidate for a **selector**.
 
 We have few general rules for custom validations & model properties / methods:
@@ -421,7 +421,7 @@ Our services and selectors must use one of:
 * Exceptions from `django.core.exceptions`
 * Custom exceptions, inheriting from the ones above.
 
-Here is a good example of service that preforms some validation and raises `django.core.exceptions.ValidationError`:
+Here is a good example of service that performs some validation and raises `django.core.exceptions.ValidationError`:
 
 ```python
 from django.core.exceptions import ValidationError
@@ -852,7 +852,7 @@ def get_items_for_user(
     return Item.objects.filter(payments__user=user)
 ```
 
-As you can see, this is a very straighforward & simple selector. We can easily cover that with 2 to 3 tests.
+As you can see, this is a very straightforward & simple selector. We can easily cover that with 2 to 3 tests.
 
 **Here are the tests:**
 
