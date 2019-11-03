@@ -35,6 +35,12 @@ Expect often updates as we discuss & decide upon different things.
     + [Example services](#example-services)
   * [Testing services](#testing-services)
   * [Testing selectors](#testing-selectors)
+- [Celery](#celery)
+  * [Structure](#structure)
+    + [Configuration](#configuration)
+    + [Tasks](#tasks)
+  * [Periodic Tasks](#periodic-tasks)
+  * [Configuration](#configuration-1)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
@@ -942,7 +948,7 @@ class GetItemsForUserTests(TestCase):
 
 ## Celery
 
-We use Celery for the following general cases:
+We use [Celery](http://www.celeryproject.org/) for the following general cases:
 
 * Communicating with 3rd party services (sending emails, notifications, etc.)
 * Offloading heavier computational tasks outside the HTTP cycle.
@@ -1103,6 +1109,12 @@ Few key things:
 * We use this task as part of a deploy procedure.
 * We always put a link to [`crontab.guru`](https://crontab.guru) to explain the cron. Otherwhise it's unreadable.
 * Everything is in one place.
+
+### Configuration
+
+Celery is a complex topic, so it's a good idea to invest time reading the documentation & understanding the different configuration options.
+
+We constantly do that & find new things or find better approaches to our problems.
 
 ## Inspiration
 
