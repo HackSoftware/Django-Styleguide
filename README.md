@@ -35,6 +35,12 @@ Expect often updates as we discuss & decide upon different things.
     + [Example services](#example-services)
   * [Testing services](#testing-services)
   * [Testing selectors](#testing-selectors)
+- [Celery](#celery)
+  * [Structure](#structure)
+    + [Configuration](#configuration)
+    + [Tasks](#tasks)
+  * [Periodic Tasks](#periodic-tasks)
+  * [Configuration](#configuration-1)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
@@ -939,6 +945,179 @@ class GetItemsForUserTests(TestCase):
 
         self.assertEqual(expected, result)
 ```
+
+## Celery
+
+We use [Celery](http://www.celeryproject.org/) for the following general cases:
+
+* Communicating with 3rd party services (sending emails, notifications, etc.)
+* Offloading heavier computational tasks outside the HTTP cycle.
+* Periodic tasks (using Celery beat)
+
+We try to treat Celery as if it's just another interface to our core logic - meaning - **don't put business logic there.**
+
+An exmaple task might look like this:
+
+```python
+from celery import shared_task
+
+from project.app.services import some_service_name as service
+
+
+@shared_task
+def some_service_name(*args, **kwargs):
+    service(*args, **kwargs)
+```
+This is a task, having the same name as a service, which holds the actual business logic.
+
+**Of course, we can have more complex situations**, like a chain or chord of tasks, each of them doing different domain related logic. In that case, it's hard to isolate everything in a service, because we now have dependencies between the tasks.
+
+If that happens, we try to expose an interface to our domain & let the tasks work with that interface.
+
+One can argue that having an ORM object is an interface by itself, and that's true. Sometimes, you can just update your object from a task & that's OK.
+
+But there are times where you need to be strict and don't let tasks do database calls straight from the ORM, but rather, via an exposed interface for that.
+
+**More complex scenarios depend on their context. Make sure you are aware of the architecture & the decisions you are making.**
+
+### Structure
+
+#### Configuration
+
+We put Celery configuration in a Django app called `tasks`. The [Celery config](https://docs.celeryproject.org/en/latest/django/first-steps-with-django.html) itself is located in `apps.py`, in `TasksConfig.ready` method.
+
+This Django app also holds any additional utilities, related to Celery.
+
+Here's an example `project/tasks/apps.py` file:
+
+```python
+import os
+
+from celery import Celery
+
+from django.apps import apps, AppConfig
+from django.conf import settings
+
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
+
+
+app = Celery('project')
+
+
+class TasksConfig(AppConfig):
+    name = 'project.tasks'
+    verbose_name = 'Celery Config'
+
+    def ready(self):
+        app.config_from_object('django.conf:settings', namespace="CELERY")
+        app.autodiscover_tasks()
+
+
+@app.task(bind=True)
+def debug_task(self):
+    from celery.utils.log import base_logger
+    base_logger = base_logger
+
+    base_logger.debug('debug message')
+    base_logger.info('info message')
+    base_logger.warning('warning message')
+    base_logger.error('error message')
+    base_logger.critical('critical message')
+
+    print('Request: {0!r}'.format(self.request))
+
+    return 42
+```
+
+#### Tasks
+
+Tasks are located in in `tasks.py` modules in different apps.
+
+We follow the same rules as with everything else (APIs, services, selectors): **if the tasks for a given app grow too big, split them by domain.**
+
+Meaning, you can end up with `tasks/domain_a.py` and `tasks/domain_b.py`. All you need to do is import them in `tasks/__init__.py` for Celery to autodiscover them.
+
+The general rule of thumb is - split your tasks in a way that'll make sense to you.
+
+### Periodic Tasks
+
+Managing periodic tasks is quite important, especially when you have tens, or hundreds of them.
+
+We use [Celery Beat](https://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html) + `django_celery_beat.schedulers:DatabaseScheduler` + [`django-celery-beat`](https://github.com/celery/django-celery-beat) for our periodic tasks.
+
+The extra thing that we do is to have a management command, called `setup_periodic_tasks`, which holds the definition of all periodic tasks within the system. This command is located in the `tasks` app, discussed above.
+
+Here's how `project.tasks.management.commands.setup_periodic_tasks.py` looks like:
+
+```python
+from django.core.management.base import BaseCommand
+from django.db import transaction
+
+from django_celery_beat.models import IntervalSchedule, CrontabSchedule, PeriodicTask
+
+from project.app.tasks import some_periodic_task
+
+
+class Command(BaseCommand):
+    help = f"""
+    Setup celery beat periodic tasks.
+
+    Following tasks will be created:
+
+    - {some_periodic_task.name}
+    """
+
+    @transaction.atomic
+    def handle(self, *args, **kwargs):
+        print('Deleting all periodic tasks and schedules...\n')
+
+        IntervalSchedule.objects.all().delete()
+        CrontabSchedule.objects.all().delete()
+        PeriodicTask.objects.all().delete()
+
+        periodic_tasks_data = [
+            {
+                'task': some_periodic_task
+                'name': 'Do some peridoic stuff',
+                # https://crontab.guru/#15_*_*_*_*
+                'cron': {
+                    'minute': '15',
+                    'hour': '*',
+                    'day_of_week': '*',
+                    'day_of_month': '*',
+                    'month_of_year': '*',
+                },
+                'enabled': True
+            },
+        ]
+
+        for periodic_task in periodic_tasks_data:
+            print(f'Setting up {periodic_task["task"].name}')
+
+            cron = CrontabSchedule.objects.create(
+                **periodic_task['cron']
+            )
+
+            PeriodicTask.objects.create(
+                name=periodic_task['name'],
+                task=periodic_task['task'].name,
+                crontab=cron,
+                enabled=periodic_task['enabled']
+            )
+```
+
+Few key things:
+
+* We use this task as part of a deploy procedure.
+* We always put a link to [`crontab.guru`](https://crontab.guru) to explain the cron. Otherwhise it's unreadable.
+* Everything is in one place.
+
+### Configuration
+
+Celery is a complex topic, so it's a good idea to invest time reading the documentation & understanding the different configuration options.
+
+We constantly do that & find new things or find better approaches to our problems.
 
 ## Inspiration
 
