@@ -940,6 +940,30 @@ class GetItemsForUserTests(TestCase):
         self.assertEqual(expected, result)
 ```
 
+## Celery
+
+We use Celery for the following general cases:
+
+* Communicating with 3rd party services (sending emails, notifications, etc.)
+* Offloading heavier computational tasks outside the HTTP cycle.
+* Periodic tasks (using Celery beat)
+
+We try to treat Celery as if it's just another interface to our core logic - meaning - **don't put business logic there.**
+
+An exmaple task might look like this:
+
+```python
+from celery import shared_task
+
+from project.app.services import some_service_name as service
+
+@shared_task
+def some_service_name(*args, **kwargs):
+    service(*args, **kwargs)
+```
+
+This is a task, having the same name as a service, which holds the actual business logic.
+
 ## Inspiration
 
 The way we do Django is inspired by the following things:
