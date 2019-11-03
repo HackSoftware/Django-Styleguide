@@ -961,8 +961,17 @@ from project.app.services import some_service_name as service
 def some_service_name(*args, **kwargs):
     service(*args, **kwargs)
 ```
-
 This is a task, having the same name as a service, which holds the actual business logic.
+
+**Of course, we can have more complex cituations**, like a chain or chord of tasks, each of them doing different domain relateed logic. In that case, it's hard to isolate everything in a service, because we now have dependencies between the tasks.
+
+If that happens, we try to expose an interface to our domain & let the tasks work with that interface.
+
+One can argue that having an ORM object is an interface by itself, and that's true. Sometimes, you can just update your object from a task & that's OK.
+
+But there are times where you need to be strict and don't let tasks do database calls straight from the ORM, but rather, via an exposed interface for that.
+
+**More complex scenarios depend on their context. Make sure you are aware of the architecture & the decisions you are making.**
 
 ### Structure
 
