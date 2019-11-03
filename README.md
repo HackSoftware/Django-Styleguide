@@ -963,13 +963,14 @@ from celery import shared_task
 
 from project.app.services import some_service_name as service
 
+
 @shared_task
 def some_service_name(*args, **kwargs):
     service(*args, **kwargs)
 ```
 This is a task, having the same name as a service, which holds the actual business logic.
 
-**Of course, we can have more complex cituations**, like a chain or chord of tasks, each of them doing different domain relateed logic. In that case, it's hard to isolate everything in a service, because we now have dependencies between the tasks.
+**Of course, we can have more complex situations**, like a chain or chord of tasks, each of them doing different domain related logic. In that case, it's hard to isolate everything in a service, because we now have dependencies between the tasks.
 
 If that happens, we try to expose an interface to our domain & let the tasks work with that interface.
 
@@ -983,7 +984,7 @@ But there are times where you need to be strict and don't let tasks do database 
 
 #### Configuration
 
-We put Celery confguration in a Django app called `tasks`. The [Celery config](https://docs.celeryproject.org/en/latest/django/first-steps-with-django.html) itself is located in `apps.py`, in `TasksConfig.ready` method.
+We put Celery configuration in a Django app called `tasks`. The [Celery config](https://docs.celeryproject.org/en/latest/django/first-steps-with-django.html) itself is located in `apps.py`, in `TasksConfig.ready` method.
 
 This Django app also holds any additional utilities, related to Celery.
 
@@ -1033,7 +1034,7 @@ Tasks are located in in `tasks.py` modules in different apps.
 
 We follow the same rules as with everything else (APIs, services, selectors): **if the tasks for a given app grow too big, split them by domain.**
 
-Meaning, you can end up with `tasks/domain_a.py` and `tasks/domain_b.py`. All you need to do is impor them in `tasks/__init__.py` for Celery to autodiscover them.
+Meaning, you can end up with `tasks/domain_a.py` and `tasks/domain_b.py`. All you need to do is import them in `tasks/__init__.py` for Celery to autodiscover them.
 
 The general rule of thumb is - split your tasks in a way that'll make sense to you.
 
@@ -1041,7 +1042,7 @@ The general rule of thumb is - split your tasks in a way that'll make sense to y
 
 Managing periodic tasks is quite important, especially when you have tens, or hundreds of them.
 
-We use [Celery Beat](https://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html) + `django_celery_beat.schedulers:DatabaseScheduler` + [`django-celery-beat`](https://github.com/celery/django-celery-beat) for our peridoic tasks.
+We use [Celery Beat](https://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html) + `django_celery_beat.schedulers:DatabaseScheduler` + [`django-celery-beat`](https://github.com/celery/django-celery-beat) for our periodic tasks.
 
 The extra thing that we do is to have a management command, called `setup_periodic_tasks`, which holds the definition of all periodic tasks within the system. This command is located in the `tasks` app, discussed above.
 
