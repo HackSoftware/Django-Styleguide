@@ -619,8 +619,10 @@ project_name
 │   └── tests
 │       ├── __init__.py
 │       ├── models
+│       │   └── __init__.py
 │       │   └── test_some_model_name.py
 │       ├── selectors
+│       │   └── __init__.py
 │       │   └── test_some_selector_name.py
 │       └── services
 │           ├── __init__.py
