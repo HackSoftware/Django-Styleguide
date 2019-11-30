@@ -363,6 +363,12 @@ General rules for an API is:
   * Reuse serializers as little as possible
   * If you need a nested serializer, use the `inline_serializer` util
 
+### Naming convention
+
+For our APIs we use the following naming convention: `<Entity><Action>Api`.
+
+Here are few examples: `UserCreateApi`, `UserSendResetPasswordApi`, `UserDeactivateApi`, etc.
+
 ### An example list API
 
 ```python
