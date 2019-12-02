@@ -16,8 +16,11 @@ Expect often updates as we discuss & decide upon different things.
   * [Methods](#methods)
   * [Testing](#testing)
 - [Services](#services)
+  * [Naming convention](#naming-convention)
 - [Selectors](#selectors)
+  * [Naming convention](#naming-convention-1)
 - [APIs & Serializers](#apis--serializers)
+  * [Naming convention](#naming-convention-2)
   * [An example list API](#an-example-list-api)
   * [An example detail API](#an-example-detail-api)
   * [An example create API](#an-example-create-api)
@@ -290,6 +293,34 @@ def create_user(
 
 As you can see, this service calls 2 other services - `create_profile` and `send_confirmation_email`
 
+### Naming convention
+
+Naming conventions depend on your taste. It pays off to have a consistent naming convention through out a project.
+
+If we take the example above, our service is named `create_user`. The pattern is - `<action>_<entity>`.
+
+What we usually prefer in our projects, again, depending on taste, is `<entity>_<action>` or with the example above: `user_create`. This seems odd at first, but it has few nice features:
+
+* Namespacing. It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
+* Greppability. Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
+
+A full example would look like this:
+
+```python
+def user_create(
+    *,
+    email: str,
+    name: str
+) -> User:
+    user = User(email=email)
+    user.full_clean()
+    user.save()
+
+    profile_create(user=user, name=name)
+    confirmation_email_send(user=user)
+
+    return user
+```
 
 ## Selectors
 
@@ -314,6 +345,11 @@ def get_users(*, fetched_by: User) -> Iterable[User]:
 
 As you can see, `get_visible_users_for` is another selector.
 
+
+### Naming convention
+
+Read the section in services. Same rules apply here.
+
 ## APIs & Serializers
 
 When using services & selectors, all of your APIs should look simple & identical.
@@ -329,6 +365,12 @@ General rules for an API is:
   * `InputSerializer` should always be a plain `Serializer`
   * Reuse serializers as little as possible
   * If you need a nested serializer, use the `inline_serializer` util
+
+### Naming convention
+
+For our APIs we use the following naming convention: `<Entity><Action>Api`.
+
+Here are few examples: `UserCreateApi`, `UserSendResetPasswordApi`, `UserDeactivateApi`, etc.
 
 ### An example list API
 
