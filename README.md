@@ -593,7 +593,7 @@ def get_error_message(exc):
 
 You can move this code to a mixin and use it in every API to prevent code duplication.
 
-We call this `ExceptionHandlerMixin`. Here's a sample implementation from one of our projects:
+We call this `ApiErrorsMixin`. Here's a sample implementation from one of our projects:
 
 ```python
 from rest_framework import exceptions as rest_exceptions
@@ -603,7 +603,7 @@ from django.core.exceptions import ValidationError
 from project.common.utils import get_error_message
 
 
-class ExceptionHandlerMixin:
+class ApiErrorsMixin:
     """
     Mixin that transforms Django and Python exceptions into rest_framework ones.
     Without the mixin, they return 500 status code which is not desired.
@@ -629,7 +629,7 @@ Having this mixin in mind, our API can be written like that:
 ```python
 class CourseCreateApi(
     SomeAuthenticationMixin,
-    ExceptionHandlerMixin,
+    ApiErrorsMixin,
     APIView
 ):
     class InputSerializer(serializers.Serializer):
