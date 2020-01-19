@@ -651,7 +651,7 @@ All of code above can be found in `utils.py` in this repository.
 
 Next step is to generalize the format of the errors we get from our APIs. This will ease the process of displaying errors to the end user, via JavaScript.
 
-If we have a standard serializer and there is error with one of the fields, the message we get by default looks like this:
+If we have a standard serializer and there is an error with one of the fields, the message we get by default looks like this:
 
 ```python
 {
@@ -661,7 +661,7 @@ If we have a standard serializer and there is error with one of the fields, the 
 }
 ```
 
-If we have a validation error with just a message (`raise ValidationError('Something is wrong.')`), it will look like this:
+If we have a validation error with just a message - `raise ValidationError('Something is wrong.')` - it will look like this:
 
 ```python
 [
@@ -669,7 +669,7 @@ If we have a validation error with just a message (`raise ValidationError('Somet
 ]
 ```
 
-Anoter error format may look like this:
+Another error format may look like this:
 
 ```python
 {
@@ -677,9 +677,11 @@ Anoter error format may look like this:
 }
 ```
 
-Those are 3 different ways of formatting for our errors. Luckily, DRF provides a way for us to provide our own custom exception handling, where we can plug in with the formatting we want: <https://www.django-rest-framework.org/api-guide/exceptions/#custom-exception-handling>
+**Those are 3 different ways of formatting for our errors.** What we want to have is a single format, for all errors.
 
-In our projects, we follow this general way of formatting errors:
+Luckily, DRF provides a way for us to give our own custom exception handler, where we can implement the desired formatting: <https://www.django-rest-framework.org/api-guide/exceptions/#custom-exception-handling>
+
+In our projects, we format the errors like that:
 
 ```python
 {
@@ -720,7 +722,7 @@ def exception_errors_format_handler(exc, context):
     return response
 ```
 
-which needs to be to the `REST_FRAMEWORK` project settings:
+which needs to be added to the `REST_FRAMEWORK` project settings:
 
 ```python
 REST_FRAMEWORK = {
@@ -729,7 +731,7 @@ REST_FRAMEWORK = {
 }
 ```
 
-The magic happens in the `ErrorsFormatter` class. The implementation of that class can be found in the `utils.py` file, located in that repo.
+**The magic happens in the `ErrorsFormatter` class.** The implementation of that class can be found in the `utils.py` file, located in that repo.
 
 Combining `ApiErrorsMixin`, the custom exception handler & the errors formatter class, we can have predictable behavior in our APIs, when it comes to errors.
 
