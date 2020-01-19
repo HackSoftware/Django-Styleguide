@@ -30,6 +30,7 @@ Expect often updates as we discuss & decide upon different things.
 - [Exception Handling](#exception-handling)
   * [Raising Exceptions in Services / Selectors](#raising-exceptions-in-services--selectors)
   * [Handle Exceptions in APIs](#handle-exceptions-in-apis)
+  * [Error formatting](#error-formatting)
 - [Testing](#testing-1)
   * [Naming conventions](#naming-conventions)
   * [Example](#example)
@@ -645,6 +646,94 @@ class CourseCreateApi(
 ```
 
 All of code above can be found in `utils.py` in this repository.
+
+### Error formatting
+
+Next step is to generalize the format of the errors we get from our APIs. This will ease the process of displaying errors to the end user, via JavaScript.
+
+If we have a standard serializer and there is an error with one of the fields, the message we get by default looks like this:
+
+```python
+{
+    "url": [
+        "This field is required."
+    ]
+}
+```
+
+If we have a validation error with just a message - `raise ValidationError('Something is wrong.')` - it will look like this:
+
+```python
+[
+    "some error"
+]
+```
+
+Another error format may look like this:
+
+```python
+{
+    "detail": "Method \"GET\" not allowed."
+}
+```
+
+**Those are 3 different ways of formatting for our errors.** What we want to have is a single format, for all errors.
+
+Luckily, DRF provides a way for us to give our own custom exception handler, where we can implement the desired formatting: <https://www.django-rest-framework.org/api-guide/exceptions/#custom-exception-handling>
+
+In our projects, we format the errors like that:
+
+```python
+{
+  "errors": [
+    {
+      "message": "Error message",
+      "code": "Some code",
+      "field": "field_name"
+    },
+    {
+      "message": "Error message",
+      "code": "Some code",
+      "field": "nested.field_name"
+    },
+    ]
+}
+```
+
+If we raise a `ValidationError`, then field is optional.
+
+In order to acheive that, we implement a custom exception handler:
+
+```python
+from rest_framework.views import exception_handler
+
+
+def exception_errors_format_handler(exc, context):
+    response = exception_handler(exc, context)
+
+    # If unexpected error occurs (server error, etc.)
+    if response is None:
+        return response
+
+    formatter = ErrorsFormatter(exc)
+
+    response.data = formatter()
+
+    return response
+```
+
+which needs to be added to the `REST_FRAMEWORK` project settings:
+
+```python
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'project.app.handlers.exception_errors_format_handler',
+    ...
+}
+```
+
+**The magic happens in the `ErrorsFormatter` class.** The implementation of that class can be found in the `utils.py` file, located in that repo.
+
+Combining `ApiErrorsMixin`, the custom exception handler & the errors formatter class, we can have predictable behavior in our APIs, when it comes to errors.
 
 ## Testing
 
