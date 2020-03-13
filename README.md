@@ -74,7 +74,7 @@ Expect often updates as we discuss & decide upon different things.
 
 We recommend starting every new project with some kind of cookiecutter. Having the proper structure from the start pays off.
 
-For example, you can use [`cookiecutter-django`](https://github.com/pydanny/cookiecutter-django)
+For example, you can use [`cookiecutter-django`](https://github.com/pydanny/cookiecutter-django) or [`wemake-django-template`](https://github.com/wemake-services/wemake-django-template).
 
 ## Models
 
