@@ -1,4 +1,6 @@
-# Django Styleguide
+![Django Styleguide](logo.png)
+
+---
 
 Django styleguide used in [HackSoft](https://hacksoft.io) projects.
 
