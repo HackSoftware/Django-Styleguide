@@ -47,6 +47,12 @@ Expect often updates as we discuss & decide upon different things.
     + [Tasks](#tasks)
   * [Periodic Tasks](#periodic-tasks)
   * [Configuration](#configuration-1)
+- [Documentation](#documentation)
+  * [The OpenAPI Specification](#the-openapi-specification)
+  * [Generate automated documentation](#generate-automated-documentation)
+    + [drf-yasg](#drf-yasg)
+	+ [Django REST Framework](#django-rest-framework)
+  * [Rendering the documentation](#rendering-the-documentation)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
@@ -1253,6 +1259,80 @@ Few key things:
 Celery is a complex topic, so it's a good idea to invest time reading the documentation & understanding the different configuration options.
 
 We constantly do that & find new things or find better approaches to our problems.
+
+## Documentation
+
+Before we begin, we'll clarify that `Swagger` and `OpenAPI` are two completely different things.
+
+* OpenAPI is a specification that defines a standard, programming language-agnostic interface description for REST APIs.
+* Swagger is one of the many tools for implementing the OpenAPI specification.
+
+### The OpenAPI Specification
+
+There are two major versions of the OpenAPI specification (OAS):
+
+1. [OpenAPI 2](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md) -  formerly known as the Swagger Specification. It was renamed after SmartBear Software donated the specification to the OpenAPI Initiative. You can read more about that [here](https://www.openapis.org/faq).
+2. [OpenAPI 3](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md) - the first official release of the specification by the [OpenAPI Initiative](https://www.openapis.org). If you're interested to see what's new check [this article](https://swagger.io/blog/news/whats-new-in-openapi-3-0/).
+
+The latest version can be found [here](https://github.com/OAI/OpenAPI-Specification).
+
+### Generate automated documentation
+
+You can manually write the `.yml` or `.json` schema of your project. This approach allows the usage of all features available in the specification version of your choice. Flexibility comes at a price and we find it very difficult and time-consuming to keep the schema up to date.
+
+With automated schema generation, you don't have to worry about keeping it up to date, but some of the specification's features may not be supported.
+
+#### drf-yasg
+
+[drf-yasg](https://github.com/axnsan12/drf-yasg) is an opensource Django package. It's compatible with:
+
+* Django 1.11 and above
+* DRF 3.8 and above
+* Python 2.7, 3.6 and above
+
+*Keep in mind Django 1.11 is the last version that supports Python 2.7.*
+
+It generates an `OpenAPI 2` compatible schema. There aren't any signs that support for `OpenAPI 3` will be added.
+
+So far we've managed to cover all of our needs using the package. Here're a couple of use cases:
+
+* Multiple authentications
+* Versioning
+* Query parameters
+* Request and response bodies
+* Pagination
+* Examples
+* Models
+* Deprecation
+
+In case you need anything else, check the official documentation [here](https://drf-yasg.readthedocs.io/en/stable/).
+
+There're a lot of configurable settings [here](https://drf-yasg.readthedocs.io/en/stable/settings.html).
+
+#### Django Rest Framework
+
+Version `3.9` of Django REST Framework came with [Built-in OpenAPI schema support](https://www.django-rest-framework.org/community/3.9-announcement/#built-in-openapi-schema-support). It's compatible with:
+
+* Django 1.11 and above
+* DRF 3.9 and above
+* Python 2.7, 3.6, and above
+
+The generated schema supports the new `OpenAPI 3.0` specification. So far only a couple of features are supported:
+
+* Request or response body (but not both)
+* Query parameters
+* Pagination
+* Examples
+
+If you need more than that - you'll need to write it by yourself.
+
+If DRF evolves enough and supports all, or most of, drf-yasg's features we would love to migrate to it. Until then `drf-yasg` is our tool of choice.
+
+### Rendering the documentation
+
+How you visualize a project's API documentation is a matter of choice. We've used both [Swagger UI](https://github.com/swagger-api/swagger-ui) and [ReDoc](https://github.com/Redocly/redoc) with a great success.
+
+You can find more OpenAPI tools [here](https://openapi.tools).
 
 ## Inspiration
 
