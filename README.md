@@ -45,6 +45,7 @@ Expect often updates as we discuss & decide upon different things.
   * [Structure](#structure)
     + [Configuration](#configuration)
     + [Tasks](#tasks)
+    + [Circular imports between tasks & services](#circular-imports-between-tasks--services)
   * [Periodic Tasks](#periodic-tasks)
   * [Configuration](#configuration-1)
 - [Inspiration](#inspiration)
@@ -1174,6 +1175,69 @@ We follow the same rules as with everything else (APIs, services, selectors): **
 Meaning, you can end up with `tasks/domain_a.py` and `tasks/domain_b.py`. All you need to do is import them in `tasks/__init__.py` for Celery to autodiscover them.
 
 The general rule of thumb is - split your tasks in a way that'll make sense to you.
+
+#### Circular imports between tasks & services
+
+In some cases, you need invoke a task from a service or vice-versa:
+
+```python
+# project/app/services.py
+
+from project.app.tasks import task_function_1
+
+
+def service_function_1():
+    print('I delay a task!')
+    task_function_1.delay()
+
+
+def service_function_2():
+    print('I do not delay a task!')
+```
+
+```python
+# project/app/tasks.py
+
+from celery import shared_task
+
+from project.app.services import service_function_2
+
+
+@shared_task
+def task_function_1():
+    print('I do not call a service!')
+
+
+@shared_task
+def task_function_2():
+    print('I call a service!')
+    service_function_2()
+```
+
+Unfortunately, this will result in a circular import.
+
+What we usually do is we import the service function **inside** the task function:
+
+```python
+# project/app/tasks.py
+
+from celery import shared_task
+
+
+@shared_task
+def task_function_1():
+    print('I do not call a service!')
+
+
+@shared_task
+def task_function_2():
+    from project.app.services import service_function_2  # <--
+
+    print('I call a service!')
+    service_function_2()
+```
+
+* Note: Depending on the case, you may want to import the task function **inside** the service function. This is OK and will still prevent the circular import between service & task functions.
 
 ### Periodic Tasks
 
