@@ -6,6 +6,8 @@ Django styleguide used in [HackSoft](https://hacksoft.io) projects.
 
 Expect often updates as we discuss & decide upon different things.
 
+If you want to check an existing project showing most of the styleguide, [check the Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example)
+
 **Table of contents:**
 
 <!-- toc -->
