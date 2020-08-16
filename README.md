@@ -49,6 +49,8 @@ If you want to check an existing project showing most of the styleguide, [check 
     + [Tasks](#tasks)
   * [Periodic Tasks](#periodic-tasks)
   * [Configuration](#configuration-1)
+- [Misc](#misc)
+  * [mypy / type annotations](#mypy--type-annotations)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
@@ -1255,6 +1257,18 @@ Few key things:
 Celery is a complex topic, so it's a good idea to invest time reading the documentation & understanding the different configuration options.
 
 We constantly do that & find new things or find better approaches to our problems.
+
+## Misc
+
+### mypy / type annotations
+
+About type annotations & using `mypy`, [this tweet](https://twitter.com/queroumavodka/status/1294789817071542272) resonates a lot with our philosophy.
+
+We have projects where we enforce `mypy` on CI and are very strict with types.
+
+We have projects where types are more loose.
+
+Context is king here.
 
 ## Inspiration
 
