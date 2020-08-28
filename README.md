@@ -1095,7 +1095,7 @@ We use [Celery](http://www.celeryproject.org/) for the following general cases:
 
 We try to treat Celery as if it's just another interface to our core logic - meaning - **don't put business logic there.**
 
-An exmaple task might look like this:
+An example task might look like this:
 
 ```python
 from celery import shared_task
