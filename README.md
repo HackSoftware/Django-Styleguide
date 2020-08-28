@@ -708,7 +708,7 @@ In our projects, we format the errors like that:
 
 If we raise a `ValidationError`, then field is optional.
 
-In order to acheive that, we implement a custom exception handler:
+In order to achieve that, we implement a custom exception handler:
 
 ```python
 from rest_framework.views import exception_handler
