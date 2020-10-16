@@ -110,10 +110,10 @@ class Course(models.Model):
     slug_url = models.SlugField(unique=True)
 
     repository = models.URLField(blank=True)
-    video_channel = models.URLField(blank=True, null=True)
-    facebook_group = models.URLField(blank=True, null=True)
+    video_channel = models.URLField(blank=True)
+    facebook_group = models.URLField(blank=True)
 
-    logo = models.ImageField(blank=True, null=True)
+    logo = models.ImageField(blank=True)
 
     public = models.BooleanField(default=True)
 
