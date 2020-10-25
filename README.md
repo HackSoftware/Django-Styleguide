@@ -26,6 +26,8 @@ If you want to check an existing project showing most of the styleguide, [check 
 - [APIs & Serializers](#apis--serializers)
   * [Naming convention](#naming-convention-2)
   * [An example list API](#an-example-list-api)
+    + [Plain](#plain)
+    + [Filters + Pagination](#filters--pagination)
   * [An example detail API](#an-example-detail-api)
   * [An example create API](#an-example-create-api)
   * [An example update API](#an-example-update-api)
@@ -382,20 +384,198 @@ Here are few examples: `UserCreateApi`, `UserSendResetPasswordApi`, `UserDeactiv
 
 ### An example list API
 
+#### Plain
+
+A dead-simple list API would look like that:
+
 ```python
-class CourseListApi(SomeAuthenticationMixin, APIView):
+from rest_framework.views import APIView
+from rest_framework import serializers
+from rest_framework.response import Response
+
+from styleguide_example.users.selectors import user_list
+from styleguide_example.users.models import BaseUser
+
+
+class UserListApi(APIView):
     class OutputSerializer(serializers.ModelSerializer):
         class Meta:
-            model = Course
-            fields = ('id', 'name', 'start_date', 'end_date')
+            model = BaseUser
+            fields = (
+                'id',
+                'email'
+            )
 
     def get(self, request):
-        courses = get_courses()
+        users = user_list()
 
-        serializer = self.OutputSerializer(courses, many=True)
+        data = self.OutputSerializer(users, many=True).data
 
-        return Response(serializer.data)
+        return Response(data)
 ```
+
+Keep in mind this API is public by default. Authentication is up to you.
+
+#### Filters + Pagination
+
+On first glance, this is tricky, since our APIs are inheriting the plain `APIView` from DRF, while filtering and pagination is baked into the generic ones:
+
+1. [DRF Filtering](https://www.django-rest-framework.org/api-guide/filtering/)
+1. [DRF Pagination](https://www.django-rest-framework.org/api-guide/pagination/)
+
+That's why, we take the following approach:
+
+1. Selectors take care of the actual filtering.
+1. APIs take care of filter parameter serialization.
+1. APIs take care of pagination.
+
+Lets see an example:
+
+```python
+from rest_framework.views import APIView
+from rest_framework import serializers
+
+from styleguide_example.api.mixins import ApiErrorsMixin
+from styleguide_example.api.pagination import get_paginated_response, LimitOffsetPagination
+
+from styleguide_example.users.selectors import user_list
+from styleguide_example.users.models import BaseUser
+
+
+class UserListApi(ApiErrorsMixin, APIView):
+    class Pagination(LimitOffsetPagination):
+        default_limit = 1
+
+    class FilterSerializer(serializers.Serializer):
+        id = serializers.IntegerField(required=False)
+        # Important: If we use BooleanField, it will default to False
+        is_admin = serializers.NullBooleanField(required=False)
+        email = serializers.EmailField(required=False)
+
+    class OutputSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = BaseUser
+            fields = (
+                'id',
+                'email',
+                'is_admin'
+            )
+
+    def get(self, request):
+        # Make sure the filters are valid, if passed
+        filters_serializer = self.FilterSerializer(data=request.query_params)
+        filters_serializer.is_valid(raise_exception=True)
+
+        users = user_list(filters=filters_serializer.validated_data)
+
+        return get_paginated_response(
+            pagination_class=self.Pagination,
+            serializer_class=self.OutputSerializer,
+            queryset=users,
+            request=request,
+            view=self
+        )
+```
+
+When we look at the API, we can idenfity few things:
+
+1. There's a `FilterSerializer`, which will take care of the query parameters. If we don't do this here, we'll have to do it elsewhere & DRF serializers are great at this job.
+1. We pass the filters to the `user_list` selector
+1. We use the `get_paginated_response` utility, to return a .. paginated response.
+
+Now, lets look at the selector:
+
+```python
+import django_filters
+
+from styleguide_example.users.models import BaseUser
+
+
+class BaseUserFilter(django_filters.FilterSet):
+    class Meta:
+        model = BaseUser
+        fields = ('id', 'email', 'is_admin')
+
+
+def user_list(*, filters=None):
+    filters = filters or {}
+
+    qs = BaseUser.objects.all()
+
+    return BaseUserFilter(filters, qs).qs
+```
+
+As you can see, we are leveraging the powerful [`django-filter`](https://django-filter.readthedocs.io/en/stable/) library.
+
+But you can do whatever suits you best here. We have projects, where we implemented our own filtering layer & used it here.
+
+The key thing is - **selectors take care of filtering**.
+
+Finally, lets look at `get_paginated_response`:
+
+```python
+from rest_framework.response import Response
+
+
+def get_paginated_response(*, pagination_class, serializer_class, queryset, request, view):
+    paginator = pagination_class()
+
+    page = paginator.paginate_queryset(queryset, request, view=view)
+
+    if page is not None:
+        serializer = serializer_class(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    serializer = serializer_class(queryset, many=True)
+
+    return Response(data=serializer.data)
+```
+
+This is basically a code, extracted from within DRF.
+
+Same goes for the `LimitOffsetPagination:
+
+```python
+from collections import OrderedDict
+
+from rest_framework.pagination import LimitOffsetPagination as _LimitOffsetPagination
+from rest_framework.response import Response
+
+
+class LimitOffsetPagination(_LimitOffsetPagination):
+    default_limit = 10
+    max_limit = 50
+
+    def get_paginated_data(self, data):
+        return OrderedDict([
+            ('limit', self.limit),
+            ('offset', self.offset),
+            ('count', self.count),
+            ('next', self.get_next_link()),
+            ('previous', self.get_previous_link()),
+            ('results', data)
+        ])
+
+    def get_paginated_response(self, data):
+        """
+        We redefine this method in order to return `limit` and `offset`.
+        This is used by the frontend to construct the pagination itself.
+        """
+        return Response(OrderedDict([
+            ('limit', self.limit),
+            ('offset', self.offset),
+            ('count', self.count),
+            ('next', self.get_next_link()),
+            ('previous', self.get_previous_link()),
+            ('results', data)
+        ]))
+```
+
+What we basically did is reverse-engineered the generic APIs, since pagination should be able to live outside the layers of complexity there.
+
+**A possible future implementation should be able to paginate without needing the request / response of the APIView.**
+
+You can find the code for the example list API with filters & pagination in the [Styleguide Example](https://github.com/HackSoftware/Styleguide-Example#example-list-api) project.
 
 ### An example detail API
 
