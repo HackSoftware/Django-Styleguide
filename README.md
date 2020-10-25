@@ -382,20 +382,41 @@ Here are few examples: `UserCreateApi`, `UserSendResetPasswordApi`, `UserDeactiv
 
 ### An example list API
 
+#### Plain
+
+A dead-simple list API would look like that:
+
 ```python
-class CourseListApi(SomeAuthenticationMixin, APIView):
+from rest_framework.views import APIView
+from rest_framework import serializers
+from rest_framework.response import Response
+
+from styleguide_example.users.selectors import user_list
+from styleguide_example.users.models import BaseUser
+
+
+class UserListApi(APIView):
     class OutputSerializer(serializers.ModelSerializer):
         class Meta:
-            model = Course
-            fields = ('id', 'name', 'start_date', 'end_date')
+            model = BaseUser
+            fields = (
+                'id',
+                'email'
+            )
 
     def get(self, request):
-        courses = get_courses()
+        users = user_list()
 
-        serializer = self.OutputSerializer(courses, many=True)
+        data = self.OutputSerializer(users, many=True).data
 
-        return Response(serializer.data)
+        return Response(data)
 ```
+
+Keep in mind this API is public by default. Authentication is up to you.
+
+#### Filters + Pagination
+
+You can find the code for the example list API with filters & pagination in the [Styleguide Example](https://github.com/HackSoftware/Styleguide-Example#example-list-api) project.
 
 ### An example detail API
 
