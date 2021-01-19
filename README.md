@@ -172,7 +172,7 @@ Few things to spot here.
 **Custom validation:**
 
 * There's a custom model validation, defined in `clean()`. This validation uses only model fields and spans no relations.
-* This requires someone to call `full_clean()` on the model instance. The best place to do that is in the `save()` method of the model. Otherwise people can forget to call `full_clean()` in the respective service.
+* This requires someone to call `full_clean()` on the model instance. The best place to do that is in the `save()` method of the model. Otherwise, people can forget to call `full_clean()` in the respective service.
 
 **Properties:**
 
@@ -186,7 +186,7 @@ We have few general rules for custom validations & model properties / methods:
 * If the custom validation depends only on the **non-relational model fields**, define it in `clean` and call `full_clean` in `save`.
 * If the custom validation is more complex & **spans relationships**, do it in the service that creates the model.
 * It's OK to combine both `clean` and additional validation in the `service`.
-* As proposed in [this issue](https://github.com/HackSoftware/Django-Styleguide/issues/22), if you can do a validation using [Django's constraints](https://docs.djangoproject.com/en/2.2/ref/models/constraints/), then you should aim for that. Less code to write.
+* As proposed in [this issue](https://github.com/HackSoftware/Django-Styleguide/issues/22), if you can do validation using [Django's constraints](https://docs.djangoproject.com/en/2.2/ref/models/constraints/), then you should aim for that. Less code to write.
 
 
 ### Properties
@@ -283,7 +283,7 @@ A service is a simple function that:
 * Works mostly with models & other services and selectors
 * Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
 
-An example service that creates an user:
+An example service that creates a user:
 
 ```python
 def create_user(
@@ -305,7 +305,7 @@ As you can see, this service calls 2 other services - `create_profile` and `send
 
 ### Naming convention
 
-Naming conventions depend on your taste. It pays off to have a consistent naming convention through out a project.
+Naming conventions depend on your taste. It pays off to have a consistent naming convention throughout a project.
 
 If we take the example above, our service is named `create_user`. The pattern is - `<action>_<entity>`.
 
@@ -358,7 +358,7 @@ As you can see, `get_visible_users_for` is another selector.
 
 ### Naming convention
 
-Read the section in services. Same rules apply here.
+Read the section in services. The same rules apply here.
 
 ## APIs & Serializers
 
@@ -418,7 +418,7 @@ Keep in mind this API is public by default. Authentication is up to you.
 
 #### Filters + Pagination
 
-On first glance, this is tricky, since our APIs are inheriting the plain `APIView` from DRF, while filtering and pagination is baked into the generic ones:
+At first glance, this is tricky, since our APIs are inheriting the plain `APIView` from DRF, while filtering and pagination are baked into the generic ones:
 
 1. [DRF Filtering](https://www.django-rest-framework.org/api-guide/filtering/)
 1. [DRF Pagination](https://www.django-rest-framework.org/api-guide/pagination/)
@@ -429,7 +429,7 @@ That's why, we take the following approach:
 1. APIs take care of filter parameter serialization.
 1. APIs take care of pagination.
 
-Lets see an example:
+Let's look at the example:
 
 ```python
 from rest_framework.views import APIView
@@ -477,13 +477,13 @@ class UserListApi(ApiErrorsMixin, APIView):
         )
 ```
 
-When we look at the API, we can idenfity few things:
+When we look at the API, we can identify few things:
 
 1. There's a `FilterSerializer`, which will take care of the query parameters. If we don't do this here, we'll have to do it elsewhere & DRF serializers are great at this job.
 1. We pass the filters to the `user_list` selector
 1. We use the `get_paginated_response` utility, to return a .. paginated response.
 
-Now, lets look at the selector:
+Now, let's look at the selector:
 
 ```python
 import django_filters
@@ -511,7 +511,7 @@ But you can do whatever suits you best here. We have projects, where we implemen
 
 The key thing is - **selectors take care of filtering**.
 
-Finally, lets look at `get_paginated_response`:
+Finally, let's look at `get_paginated_response`:
 
 ```python
 from rest_framework.response import Response
@@ -687,9 +687,9 @@ urlpatterns = [
 
 ### Raising Exceptions in Services / Selectors
 
-Now we have separation between our HTTP interface & the core logic of our application.
+Now we have a separation between our HTTP interface & the core logic of our application.
 
-In order to keep this separation of concerns, our services and selectors must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes.
+To keep this separation of concerns, our services and selectors must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes.
 
 Our services and selectors must use one of:
 
@@ -714,11 +714,11 @@ def create_topic(*, name: str, course: Course) -> Topic:
 
 ### Handle Exceptions in APIs
 
-In order to transform the exceptions raised in the services or selectors, to a standard HTTP response, you need to catch the exception and raise something that the rest framework understands.
+To transform the exceptions raised in the services or selectors, to a standard HTTP response, you need to catch the exception and raise something that the rest framework understands.
 
 The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your Python/Django exception to a DRF exception.
 
-By default, the [`handle_exception` method implementation in DRF](https://www.django-rest-framework.org/api-guide/exceptions/#exception-handling-in-rest-framework-views) handles the Django's built-in `Http404` and `PermissionDenied` exceptions, thus there is no need for you to handle it by hand.
+By default, the [`handle_exception` method implementation in DRF](https://www.django-rest-framework.org/api-guide/exceptions/#exception-handling-in-rest-framework-views) handles Django's built-in `Http404` and `PermissionDenied` exceptions, thus there is no need for you to handle it by hand.
 
 Here is an example:
 
@@ -832,11 +832,11 @@ class CourseCreateApi(
         return Response(status=status.HTTP_201_CREATED)
 ```
 
-All of code above can be found in `utils.py` in this repository.
+All of the code above can be found in `utils.py` in this repository.
 
 ### Error formatting
 
-Next step is to generalize the format of the errors we get from our APIs. This will ease the process of displaying errors to the end user, via JavaScript.
+The next step is to generalize the format of the errors we get from our APIs. This will ease the process of displaying errors to the end-user, via JavaScript.
 
 If we have a standard serializer and there is an error with one of the fields, the message we get by default looks like this:
 
@@ -887,7 +887,7 @@ In our projects, we format the errors like that:
 }
 ```
 
-If we raise a `ValidationError`, then field is optional.
+If we raise a `ValidationError`, then the field is optional.
 
 In order to achieve that, we implement a custom exception handler:
 
@@ -898,7 +898,7 @@ from rest_framework.views import exception_handler
 def exception_errors_format_handler(exc, context):
     response = exception_handler(exc, context)
 
-    # If unexpected error occurs (server error, etc.)
+    # If an unexpected error occurs (server error, etc.)
     if response is None:
         return response
 
@@ -953,9 +953,9 @@ project_name
 We follow 2 general naming conventions:
 
 * The test file names should be `test_the_name_of_the_thing_that_is_tested.py`
-* The test case shoud be `class TheNameOfTheThingThatIsTestedTests(TestCase):`
+* The test case should be `class TheNameOfTheThingThatIsTestedTests(TestCase):`
 
-For example if we have:
+For example, if we have:
 
 ```python
 def a_very_neat_service(*args, **kwargs):
@@ -975,7 +975,7 @@ class AVeryNeatServiceTests(TestCase):
     pass
 ```
 
-For tests of utility functions, we follow a similiar pattern.
+For tests of utility functions, we follow a similar pattern.
 
 For example, if we have `project_name/common/utils.py`, then we are going to have `project_name/common/tests/test_utils.py` and place different test cases in that file.
 
@@ -984,7 +984,7 @@ If we are to split the `utils.py` module into submodules, the same will happen f
 * `project_name/common/utils/files.py`
 * `project_name/common/tests/utils/test_files.py`
 
-We try to match the stucture of our modules with the structure of their respective tests.
+We try to match the structure of our modules with the structure of their respective tests.
 
 ### Example
 
@@ -1106,7 +1106,7 @@ When creating the required state for a given test, one can use a combination of:
 * Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
 * Plain `Model.objects.create()` calls, if factories are not yet introduced in the project.
 
-**Lets take a look at our service from the example:**
+**Let's take a look at our service from the example:**
 
 ```python
 from django.contrib.auth.models import User
@@ -1201,7 +1201,7 @@ Testing selectors is also an important part of every project.
 
 Sometimes, the selectors can be really straightforward, and if we have to "cut corners", we can omit those tests. But it the end, it's important to cover our selectors too.
 
-Lets take another look at our example selector:
+Let's take another look at our example selector:
 
 ```python
 from django.contrib.auth.models import User
@@ -1352,7 +1352,7 @@ def debug_task(self):
 
 #### Tasks
 
-Tasks are located in in `tasks.py` modules in different apps.
+Tasks are located in `tasks.py` modules in different apps.
 
 We follow the same rules as with everything else (APIs, services, selectors): **if the tasks for a given app grow too big, split them by domain.**
 
@@ -1362,7 +1362,7 @@ The general rule of thumb is - split your tasks in a way that'll make sense to y
 
 #### Circular imports between tasks & services
 
-In some cases, you need invoke a task from a service or vice-versa:
+In some cases, you need to invoke a task from a service or vice-versa:
 
 ```python
 # project/app/services.py
@@ -1425,7 +1425,7 @@ def task_function_2():
 
 ### Periodic Tasks
 
-Managing periodic tasks is quite important, especially when you have tens, or hundreds of them.
+Managing periodic tasks is quite important, especially when you have tens or hundreds of them.
 
 We use [Celery Beat](https://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html) + `django_celery_beat.schedulers:DatabaseScheduler` + [`django-celery-beat`](https://github.com/celery/django-celery-beat) for our periodic tasks.
 
@@ -1493,7 +1493,7 @@ class Command(BaseCommand):
 Few key things:
 
 * We use this task as part of a deploy procedure.
-* We always put a link to [`crontab.guru`](https://crontab.guru) to explain the cron. Otherwhise it's unreadable.
+* We always put a link to [`crontab.guru`](https://crontab.guru) to explain the cron. Otherwise it's unreadable.
 * Everything is in one place.
 
 ### Configuration
@@ -1510,7 +1510,7 @@ About type annotations & using `mypy`, [this tweet](https://twitter.com/querouma
 
 We have projects where we enforce `mypy` on CI and are very strict with types.
 
-We have projects where types are more loose.
+We have projects where types are looser.
 
 Context is king here.
 
