@@ -642,7 +642,7 @@ class Serializer(serializers.Serializer):
     })
 ```
 
-The implementation of `inline_serializer` can be found in `utils.py` in this repo.
+The implementation of `inline_serializer` can be found [here](https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/common/utils.py#L34), in the [Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example) repo.
 
 ## Urls
 
@@ -832,7 +832,7 @@ class CourseCreateApi(
         return Response(status=status.HTTP_201_CREATED)
 ```
 
-All of the code above can be found in `utils.py` in this repository.
+All of the code above can be found in [here](https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/api/mixins.py#L70), in the [Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example) repo.
 
 ### Error formatting
 
@@ -918,9 +918,15 @@ REST_FRAMEWORK = {
 }
 ```
 
-**The magic happens in the `ErrorsFormatter` class.** The implementation of that class can be found in the `utils.py` file, located in that repo.
+**The magic happens in the `ErrorsFormatter` class.**
+
+The implementation of that class can be found [here](https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/api/errors.py), in the [Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example) repo.
 
 Combining `ApiErrorsMixin`, the custom exception handler & the errors formatter class, we can have predictable behavior in our APIs, when it comes to errors.
+
+**A note:**
+
+> We've moved away from this particular way of formatting errors & we'll be updating the styleguide with a more generic approach.
 
 ## Testing
 
