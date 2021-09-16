@@ -317,7 +317,7 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from project.education.models import Course
+from project.some_app.models import Course
 
 
 class CourseTests(TestCase):
