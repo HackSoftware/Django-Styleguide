@@ -15,7 +15,9 @@ If you want to check an existing project showing most of the styleguide, [check 
 - [Overview](#overview)
 - [Cookie Cutter](#cookie-cutter)
 - [Models](#models)
-  * [Custom validation](#custom-validation)
+  * [Base model](#base-model)
+  * [Validation - `clean` and `full_clean`](#validation---clean-and-full_clean)
+  * [Validation - constraints](#validation---constraints)
   * [Properties](#properties)
   * [Methods](#methods)
   * [Testing](#testing)
@@ -91,191 +93,248 @@ Few examples:
 
 ## Models
 
+Models should take care of the data model and not much else.
+
+### Base model
+
+It's a good idea to define a `BaseModel`, that you can inherit.
+
+Usually, fields like `created_at` and `updated_at` are perfect candidates to go into a `BaseModel`.
+
+Defining a primary key can also go there. Potential candidate for that is the [`UUIDField`](https://docs.djangoproject.com/en/dev/ref/models/fields/#uuidf)
+
+Here's an example `BaseModel`:
+
+```python
+from django.db import models
+from django.utils import timezone
+
+
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(db_index=True, default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+```
+
+Then, whenever you need a new model, just inherit `BaseModel`:
+
+```python
+class SomeModel(BaseModel):
+    pass
+```
+
+### Validation - `clean` and `full_clean`
+
 Lets take a look at an example model:
 
 ```python
-class Course(models.Model):
+class Course(BaseModel):
     name = models.CharField(unique=True, max_length=255)
 
     start_date = models.DateField()
     end_date = models.DateField()
 
-    attendable = models.BooleanField(default=True)
+    def clean(self):
+        if self.start_date >= self.end_date:
+            raise ValidationError("End date cannot be before start date")
+```
 
-    students = models.ManyToManyField(
-        Student,
-        through='CourseAssignment',
-        through_fields=('course', 'student')
-    )
+We are defining the model's `clean` method, because we want to make sure we get good data in our database.
 
-    teachers = models.ManyToManyField(
-        Teacher,
-        through='CourseAssignment',
-        through_fields=('course', 'teacher')
-    )
+Now, in order for the `clean` method to be called, someone must call `full_clean` on an instance of our model, before saving.
 
-    slug_url = models.SlugField(unique=True)
+**Our recommendation is to do that in the service, right before calling clean:**
 
-    repository = models.URLField(blank=True)
-    video_channel = models.URLField(blank=True)
-    facebook_group = models.URLField(blank=True)
+```python
+def course_create(*, name: str, start_date: date, end_date: date) -> Course:
+    obj = Course(name=name, start_date=start_date, end_date=end_date)
 
-    logo = models.ImageField(blank=True)
+    obj.full_clean()
+    obj.save()
 
-    public = models.BooleanField(default=True)
+    return obj
+```
 
-    generate_certificates_delta = models.DurationField(default=timedelta(days=15))
+This also plays well with Django admin, because the forms used there will trigger `full_clean` on the instance.
 
-    objects = CourseManager()
+**We have few general rules of thumb for when to add validation in the model's `clean` method:**
+
+1. If we are validating based on multiple, **non-relational fields**, of the model.
+1. If the validation itself is simple enough.
+
+**Validation should be moved to the service layer if:**
+
+1. The validation logic is more complex.
+1. Spanning relations & fetching additional data is required.
+
+> It's OK to have validation both in `clean` and in the service, but we tend to move things in the service, if that's the case.
+
+### Validation - constraints
+
+As proposed in [this issue](https://github.com/HackSoftware/Django-Styleguide/issues/22), if you can do validation using [Django's constraints](https://docs.djangoproject.com/en/dev/ref/models/constraints/), then you should aim for that.
+
+Less code to write, less to code to maintain, the database will take care of the data even if it's being inserted from a different place.
+
+**TODO:** Add above example with constraints.
+
+### Properties
+
+Model properties are great way to quickly access a derived value from a model's instance.
+
+For example, lets look at the `has_started` and `has_finished` properties of our `Course` model:
+
+```python
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+
+
+class Course(BaseModel):
+    name = models.CharField(unique=True, max_length=255)
+
+    start_date = models.DateField()
+    end_date = models.DateField()
 
     def clean(self):
-        if self.start_date > self.end_date:
-            raise ValidationError("End date cannot be before start date!")
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
+        if self.start_date >= self.end_date:
+            raise ValidationError("End date cannot be before start date")
 
     @property
-    def visible_teachers(self):
-        return self.teachers.filter(course_assignments__hidden=False).select_related('profile')
-
-    @property
-    def duration_in_weeks(self):
-        weeks = rrule.rrule(
-            rrule.WEEKLY,
-            dtstart=self.start_date,
-            until=self.end_date
-        )
-        return weeks.count()
-
-    @property
-    def has_started(self):
-        now = get_now()
+    def has_started(self) -> bool:
+        now = timezone.now()
 
         return self.start_date <= now.date()
 
     @property
-    def has_finished(self):
-        now = get_now()
+    def has_finished(self) -> bool:
+        now = timezone.now()
 
         return self.end_date <= now.date()
-
-    @property
-    def can_generate_certificates(self):
-        now = get_now()
-
-        return now.date() <= self.end_date + self.generate_certificates_delta
-
-    def __str__(self) -> str:
-        return self.name
 ```
 
-Few things to spot here.
+Those properties are handy, because we can now refer to them in serializers or use them in templates.
 
-**Custom validation:**
+**We have few general rules of thumb, for when to add properties to the model:**
 
-* There's a custom model validation, defined in `clean()`. This validation uses only model fields and spans no relations.
-* This requires someone to call `full_clean()` on the model instance. The best place to do that is in the `save()` method of the model. Otherwise, people can forget to call `full_clean()` in the respective service.
+1. If we need a simple derived value, based on **non-relational model fields**, add a `@property` for that.
+1. If the calculation of the derived value is simple enough.
 
-**Properties:**
+**Properties should be something else (service, selector, utility) in the following cases:**
 
-* All properties, except `visible_teachers`, work directly on model fields.
-* `visible_teachers` is a great candidate for a **selector**.
+1. If we need to span multiple relations or fetch additional data.
+1. If the calculation is more complex.
 
-We have few general rules for custom validations & model properties / methods:
-
-### Custom validation
-
-* If the custom validation depends only on the **non-relational model fields**, define it in `clean` and call `full_clean` in `save`.
-* If the custom validation is more complex & **spans relationships**, do it in the service that creates the model.
-* It's OK to combine both `clean` and additional validation in the `service`.
-* As proposed in [this issue](https://github.com/HackSoftware/Django-Styleguide/issues/22), if you can do validation using [Django's constraints](https://docs.djangoproject.com/en/2.2/ref/models/constraints/), then you should aim for that. Less code to write.
-
-
-### Properties
-
-* If your model properties use only **non-relational model fields**, they are OK to stay as properties.
-* If a property, such as `visible_teachers` starts **spanning relationships**, it's better to define a selector for that.
-
+Keep in mind that those rules are vague, because context is quite often important. Use your best judgement!
 
 ### Methods
 
-* If you need a method that updates several fields at once (for example - `created_at` and `created_by` when something happens), you can create a model method that does the job.
-* Every model method should be wrapped in a service. There should be no model method calling outside a service.
+Model methods are also very powerful tool, that can build on top of properties.
+
+Lets see an example with the `is_within(self, x)` method:
+
+```python
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
+
+class Course(BaseModel):
+    name = models.CharField(unique=True, max_length=255)
+
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    def clean(self):
+        if self.start_date >= self.end_date:
+            raise ValidationError("End date cannot be before start date")
+
+    @property
+    def has_started(self) -> bool:
+        now = timezone.now()
+
+        return self.start_date <= now.date()
+
+    @property
+    def has_finished(self) -> bool:
+        now = timezone.now()
+
+        return self.end_date <= now.date()
+
+    def is_within(self, x: date) -> bool:
+        return self.start_date <= x <= self.end_date
+```
+
+`is_within` cannot be a property, because it requires an argument. So it's a method instead.
+
+Another great way for using methods in models is using them for **attribute setting**, when setting one attribute must always be followed by setting another attribute with a derived value.
+
+An example:
+
+```python
+from django.utils.crypto import get_random_string
+from django.conf import settings
+from django.utils import timezone
+
+
+class Token(BaseModel):
+    secret = models.CharField(max_length=255, unique=True)
+    expiry = models.DateTimeField(blank=True, null=True)
+
+    def set_new_secret(self):
+        now = timezone.now()
+
+        self.secret = get_random_string(255)
+        self.expiry = now + settings.TOKEN_EXPIRY_TIMEDELTA
+
+        return self
+```
+
+Now, we can safely call `set_new_secret`, that'll produce correct values for both `secret` and `expiry`.
+
+**We have few general rules of thumb, for when to add methods to the model:**
+
+1. If we need a simple derived value, that requires arguments, based on **non-relational model fields**, add a method for that.
+1. If the calculation of the derived value is simple enough.
+1. If setting one attribute always requires setting values to other attributes, use a method for that.
+
+**Models should be something else (service, selector, utility) in the following cases:**
+
+1. If we need to span multiple relations or fetch additional data.
+1. If the calculation is more complex.
+
+Keep in mind that those rules are vague, because context is quite often important. Use your best judgement!
 
 ### Testing
 
-Models need to be tested only if there's something additional to them - like custom validation or properties.
+Models need to be tested only if there's something additional to them - like validation, properties or methods.
 
-If we are strict & don't do custom validation / properties, then we can test the models without actually writing anything to the database => we are going to get quicker tests.
-
-For example, if we want to test the custom validation, here's how a test could look like:
+Here's an example:
 
 ```python
 from datetime import timedelta
 
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
-from project.common.utils import get_now
-
-from project.education.factories import CourseFactory
 from project.education.models import Course
 
 
 class CourseTests(TestCase):
     def test_course_end_date_cannot_be_before_start_date(self):
-        start_date = get_now()
-        end_date = get_now() - timedelta(days=1)
+        start_date = timezone.now()
+        end_date = timezone.now() - timedelta(days=1)
 
-        course_data = CourseFactory.build()
-        course_data['start_date'] = start_date
-        course_data['end_date'] = end_date
-
-        course = Course(**course_data)
+        course = Course(start_date=start_date, end_date=end_date)
 
         with self.assertRaises(ValidationError):
             course.full_clean()
 ```
 
-There's a lot going on in this test:
+A few things to note here:
 
-* `get_now()` returns a timezone aware datetime.
-* `CourseFactory.build()` will return a dictionary with all required fields for a course to exist.
-* We replace the values for `start_date` and `end_date`.
-* We assert that a validation error is going to be raised if we call `full_clean`.
-* We are not hitting the database at all, since there's no need for that.
-
-Here's how `CourseFactory` looks like:
-
-```python
-class CourseFactory(factory.DjangoModelFactory):
-    name = factory.Sequence(lambda n: f'{n}{faker.word()}')
-    start_date = factory.LazyAttribute(
-        lambda _: get_now()
-    )
-    end_date = factory.LazyAttribute(
-        lambda _: get_now() + timedelta(days=30)
-    )
-
-    slug_url = factory.Sequence(lambda n: f'{n}{faker.slug()}')
-
-    repository = factory.LazyAttribute(lambda _: faker.url())
-    video_channel = factory.LazyAttribute(lambda _: faker.url())
-    facebook_group = factory.LazyAttribute(lambda _: faker.url())
-
-    class Meta:
-        model = Course
-
-    @classmethod
-    def _build(cls, model_class, *args, **kwargs):
-        return kwargs
-
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        return create_course(**kwargs)
-```
+1. We assert that a validation error is going to be raised if we call `full_clean`.
+1. **We are not hitting the database at all**, since there's no need for that. This can speed up certain tests.
 
 ## Services
 
