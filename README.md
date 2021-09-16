@@ -178,6 +178,12 @@ Less code to write, less to code to maintain, the database will take care of the
 
 **TODO:** Add above example with constraints.
 
+The Django's documentation on constraints is quite lean, so you can check the following articles by Adam Johnson, for examples of how to use them:
+
+1. [Using Django Check Constraints to Ensure Only One Field Is Set](https://adamj.eu/tech/2020/03/25/django-check-constraints-one-field-set/) 
+1. [Django’s Field Choices Don’t Constrain Your Data](https://adamj.eu/tech/2020/01/22/djangos-field-choices-dont-constrain-your-data/) 
+1. [Using Django Check Constraints to Prevent Self-Following](https://adamj.eu/tech/2021/02/26/django-check-constraints-prevent-self-following/) 
+
 ### Properties
 
 Model properties are great way to quickly access a derived value from a model's instance.
