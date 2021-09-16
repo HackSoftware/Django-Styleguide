@@ -2,11 +2,10 @@
 
 ---
 
-Django styleguide used in [HackSoft](https://hacksoft.io) projects.
+Django styleguide that we use in [HackSoft](https://hacksoft.io).
 
-Expect often updates as we discuss & decide upon different things.
-
-If you want to check an existing project showing most of the styleguide, [check the Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example)
+1. We have a [`Styleguide-Example`](https://github.com/HackSoftware/Styleguide-Example) to show most of the styleguide in an actual project.
+1. You can watch Radoslav Georgiev's [Django structure for scale and longevity](https://www.youtube.com/watch?v=yG3ZdxBb1oo) for the philosophy behind the styleguide.
 
 **Table of contents:**
 
