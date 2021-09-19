@@ -408,30 +408,12 @@ In this example, everything related to the user creation is in one place and can
 
 Naming conventions depend on your taste. It pays off to have a consistent naming convention throughout a project.
 
-If we take the example above, our service is named `create_user`. The pattern is - `<action>_<entity>`.
+If we take the example above, our service is named `user_create`. The pattern is - `<entity>_<action>`.
 
-What we usually prefer in our projects, again, depending on taste, is `<entity>_<action>` or with the example above: `user_create`. This seems odd at first, but it has few nice features:
+This is what we prefer in HackSoft's projects. This seems odd at first, but it has few nice features:
 
-* Namespacing. It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
-* Greppability. Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
-
-A full example would look like this:
-
-```python
-def user_create(
-    *,
-    email: str,
-    name: str
-) -> User:
-    user = User(email=email)
-    user.full_clean()
-    user.save()
-
-    profile_create(user=user, name=name)
-    confirmation_email_send(user=user)
-
-    return user
-```
+* **Namespacing.** It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
+* **Greppability.** Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
 
 ## Selectors
 
