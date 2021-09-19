@@ -22,6 +22,7 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
   * [Testing](#testing)
 - [Services](#services)
   * [Naming convention](#naming-convention)
+  * [Modules](#modules)
   * [Selectors](#selectors)
 - [APIs & Serializers](#apis--serializers)
   * [Naming convention](#naming-convention-1)
@@ -413,6 +414,29 @@ This is what we prefer in HackSoft's projects. This seems odd at first, but it h
 
 * **Namespacing.** It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
 * **Greppability.** Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
+
+### Modules
+
+If you have a simple-enough Django app with a bunch of services, they can all live happily in the `service.py` module.
+
+But when things get big, you might want to split `services.py` into a folder with sub-modules, depending on the different sub-domains that you are dealing with in your app.
+
+For example, lets say we have an `authentication` app, where we have 1 sub-module in our `services` module, that deals with `jwt`, and one sub-module that deals with `oauth`.
+
+The structure may look like this:
+
+```
+services
+├── __init__.py
+├── jwt.py
+└── oauth.py
+```
+
+There are lots of flavors here:
+
+- You can do the import-export dance in `services/__init__.py`, so you can import from `project.authentication.services` everywhere else
+- You can create a folder-module, `jwt/__init__.py`, and put the code there.
+- Basically, the structure is up to you. If you feel it's time to restructure and refactor - do so.
 
 ### Selectors
 
