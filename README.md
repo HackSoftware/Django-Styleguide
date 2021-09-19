@@ -176,7 +176,27 @@ As proposed in [this issue](https://github.com/HackSoftware/Django-Styleguide/is
 
 Less code to write, less to code to maintain, the database will take care of the data even if it's being inserted from a different place.
 
-**TODO:** Add above example with constraints.
+Lets look at an example!
+
+```python
+class Course(BaseModel):
+    name = models.CharField(unique=True, max_length=255)
+
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                name="start_date_before_end_date",
+                check=Q(start_date__lt=F("end_date"))
+            )
+        ]
+```
+
+Now, if we try to create new object via `course.save()` or via `Course.objects.create(...)`, we are going to get an `IntegrityError`, rather than a `ValidationError`.
+
+This can actually be a downside to the approach, because now, we have to deal with the `IntegrityError`, which does not always have the best error message.
 
 The Django's documentation on constraints is quite lean, so you can check the following articles by Adam Johnson, for examples of how to use them:
 
