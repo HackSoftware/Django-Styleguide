@@ -363,18 +363,29 @@ A few things to note here:
 
 ## Services
 
-A service is a simple function that:
+Services are where business logic lives.
 
-* Lives in `your_app/services.py` module
-* Takes keyword-only arguments
-* Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment)
-* Works mostly with models & other services and selectors
-* Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
+The service layer speaks the specific domain language of the software, can access the database & other resources & can interact with other parts of your system.
+
+A service can be:
+
+- A simple function.
+- A class.
+- An entire module.
+- Whatever makes sense in your case.
+
+In most cases, a service can be simple function that:
+
+- Lives in `your_app/services.py` module.
+- Takes keyword-only arguments, unless it requires no or one argument.
+- Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment).
+- Interacts with the database, other resources & other parts of your system.
+- Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
 
 An example service that creates a user:
 
 ```python
-def create_user(
+def user_create(
     *,
     email: str,
     name: str
@@ -383,13 +394,15 @@ def create_user(
     user.full_clean()
     user.save()
 
-    create_profile(user=user, name=name)
-    send_confirmation_email(user=user)
+    profile_create(user=user, name=name)
+    confirmation_email_send(user=user)
 
     return user
 ```
 
-As you can see, this service calls 2 other services - `create_profile` and `send_confirmation_email`
+As you can see, this service calls 2 other services - `profile_create` and `confirmation_email_send`.
+
+In this example, everything related to the user creation is in one place and can be traced.
 
 ### Naming convention
 
