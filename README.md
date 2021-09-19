@@ -22,10 +22,9 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
   * [Testing](#testing)
 - [Services](#services)
   * [Naming convention](#naming-convention)
-- [Selectors](#selectors)
-  * [Naming convention](#naming-convention-1)
+  * [Selectors](#selectors)
 - [APIs & Serializers](#apis--serializers)
-  * [Naming convention](#naming-convention-2)
+  * [Naming convention](#naming-convention-1)
   * [An example list API](#an-example-list-api)
     + [Plain](#plain)
     + [Filters + Pagination](#filters--pagination)
@@ -376,7 +375,7 @@ A service can be:
 
 In most cases, a service can be simple function that:
 
-- Lives in `your_app/services.py` module.
+- Lives in `<your_app>/services.py` module.
 - Takes keyword-only arguments, unless it requires no or one argument.
 - Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment).
 - Interacts with the database, other resources & other parts of your system.
@@ -406,7 +405,7 @@ In this example, everything related to the user creation is in one place and can
 
 ### Naming convention
 
-Naming conventions depend on your taste. It pays off to have a consistent naming convention throughout a project.
+Naming convention depends on your taste. It pays off to have something consistent throughout a project.
 
 If we take the example above, our service is named `user_create`. The pattern is - `<entity>_<action>`.
 
@@ -415,33 +414,32 @@ This is what we prefer in HackSoft's projects. This seems odd at first, but it h
 * **Namespacing.** It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
 * **Greppability.** Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
 
-## Selectors
+### Selectors
 
-A selector is a simple function that:
+In most of our projects, we distinguish between "Pushing data to the database" and "Pulling data from the database":
 
-* Lives in `your_app/selectors.py` module
-* Takes keyword-only arguments
-* Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment)
-* Works mostly with models & other services and selectors
-* Does business logic around fetching data from your database
+1. Services take care of the push.
+1. **Selectors take care of the pull.**
+1. Selectors can be viewed as a "sub-layer" to services, that's specialized in fetching data.
 
-An example selector that lists users from the database:
+> If this idea does not resonate well with you, you can just have services for both "kinds" of operations.
+
+A selector follows the same rules as a service.
+
+For example, in a module `<your_app>/selectors.py`, we can have the following:
 
 ```python
-def get_users(*, fetched_by: User) -> Iterable[User]:
-    user_ids = get_visible_users_for(user=fetched_by)
+def users_list(*, fetched_by: User) -> Iterable[User]:
+    user_ids = users_get_visible_for(user=fetched_by)
 
     query = Q(id__in=user_ids)
 
     return User.objects.filter(query)
 ```
 
-As you can see, `get_visible_users_for` is another selector.
+As you can see, `users_get_visible_for` is another selector.
 
-
-### Naming convention
-
-Read the section in services. The same rules apply here.
+You can return querysets, or lists or whatever makes sense to your specific case.
 
 ## APIs & Serializers
 
