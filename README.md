@@ -367,6 +367,10 @@ Services are where business logic lives.
 
 The service layer speaks the specific domain language of the software, can access the database & other resources & can interact with other parts of your system.
 
+Here's a very simple diagram, positioning the service layer in our Django apps:
+
+![Service layer](https://user-images.githubusercontent.com/387867/134778130-be168592-b953-4b74-8588-a3dbaa0b6871.png)
+
 A service can be:
 
 - A simple function.
