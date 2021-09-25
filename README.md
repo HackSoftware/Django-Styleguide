@@ -452,15 +452,15 @@ A selector follows the same rules as a service.
 For example, in a module `<your_app>/selectors.py`, we can have the following:
 
 ```python
-def users_list(*, fetched_by: User) -> Iterable[User]:
-    user_ids = users_get_visible_for(user=fetched_by)
+def user_list(*, fetched_by: User) -> Iterable[User]:
+    user_ids = user_get_visible_for(user=fetched_by)
 
     query = Q(id__in=user_ids)
 
     return User.objects.filter(query)
 ```
 
-As you can see, `users_get_visible_for` is another selector.
+As you can see, `user_get_visible_for` is another selector.
 
 You can return querysets, or lists or whatever makes sense to your specific case.
 
