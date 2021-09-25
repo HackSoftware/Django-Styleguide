@@ -470,9 +470,9 @@ Since services hold our business logic, they are an ideal candidate for tests.
 
 If you decide to cover the service layer with tests, we have few general rules of thumb to follow:
 
-1. The tests should cover the business logic behind the services in an exhaustive manner.
-1. The tests should hit the database - creating & reading from it.
-1. The tests should mock async task calls & everything that goes outside the project.
+1. The tests **should cover the business logic** in an exhaustive manner.
+1. The tests **should hit the database** - creating & reading from it.
+1. The tests **should mock async task calls & everything that goes outside the project.**
 
 When creating the required state for a given test, one can use a combination of:
 
