@@ -22,10 +22,11 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
   * [Testing](#testing)
 - [Services](#services)
   * [Naming convention](#naming-convention)
-- [Selectors](#selectors)
-  * [Naming convention](#naming-convention-1)
+  * [Modules](#modules)
+  * [Selectors](#selectors)
+  * [Testing](#testing-1)
 - [APIs & Serializers](#apis--serializers)
-  * [Naming convention](#naming-convention-2)
+  * [Naming convention](#naming-convention-1)
   * [An example list API](#an-example-list-api)
     + [Plain](#plain)
     + [Filters + Pagination](#filters--pagination)
@@ -38,14 +39,8 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
   * [Raising Exceptions in Services / Selectors](#raising-exceptions-in-services--selectors)
   * [Handle Exceptions in APIs](#handle-exceptions-in-apis)
   * [Error formatting](#error-formatting)
-- [Testing](#testing-1)
+- [Testing](#testing-2)
   * [Naming conventions](#naming-conventions)
-  * [Example](#example)
-    + [Example models](#example-models)
-    + [Example selectors](#example-selectors)
-    + [Example services](#example-services)
-  * [Testing services](#testing-services)
-  * [Testing selectors](#testing-selectors)
 - [Celery](#celery)
   * [Structure](#structure)
     + [Configuration](#configuration)
@@ -363,46 +358,30 @@ A few things to note here:
 
 ## Services
 
-A service is a simple function that:
+Services are where business logic lives.
 
-* Lives in `your_app/services.py` module
-* Takes keyword-only arguments
-* Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment)
-* Works mostly with models & other services and selectors
-* Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
+The service layer speaks the specific domain language of the software, can access the database & other resources & can interact with other parts of your system.
+
+Here's a very simple diagram, positioning the service layer in our Django apps:
+
+![Service layer](https://user-images.githubusercontent.com/387867/134778130-be168592-b953-4b74-8588-a3dbaa0b6871.png)
+
+A service can be:
+
+- A simple function.
+- A class.
+- An entire module.
+- Whatever makes sense in your case.
+
+In most cases, a service can be simple function that:
+
+- Lives in `<your_app>/services.py` module.
+- Takes keyword-only arguments, unless it requires no or one argument.
+- Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment).
+- Interacts with the database, other resources & other parts of your system.
+- Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
 
 An example service that creates a user:
-
-```python
-def create_user(
-    *,
-    email: str,
-    name: str
-) -> User:
-    user = User(email=email)
-    user.full_clean()
-    user.save()
-
-    create_profile(user=user, name=name)
-    send_confirmation_email(user=user)
-
-    return user
-```
-
-As you can see, this service calls 2 other services - `create_profile` and `send_confirmation_email`
-
-### Naming convention
-
-Naming conventions depend on your taste. It pays off to have a consistent naming convention throughout a project.
-
-If we take the example above, our service is named `create_user`. The pattern is - `<action>_<entity>`.
-
-What we usually prefer in our projects, again, depending on taste, is `<entity>_<action>` or with the example above: `user_create`. This seems odd at first, but it has few nice features:
-
-* Namespacing. It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
-* Greppability. Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
-
-A full example would look like this:
 
 ```python
 def user_create(
@@ -420,33 +399,176 @@ def user_create(
     return user
 ```
 
-## Selectors
+As you can see, this service calls 2 other services - `profile_create` and `confirmation_email_send`.
 
-A selector is a simple function that:
+In this example, everything related to the user creation is in one place and can be traced.
 
-* Lives in `your_app/selectors.py` module
-* Takes keyword-only arguments
-* Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment)
-* Works mostly with models & other services and selectors
-* Does business logic around fetching data from your database
+### Naming convention
 
-An example selector that lists users from the database:
+Naming convention depends on your taste. It pays off to have something consistent throughout a project.
+
+If we take the example above, our service is named `user_create`. The pattern is - `<entity>_<action>`.
+
+This is what we prefer in HackSoft's projects. This seems odd at first, but it has few nice features:
+
+* **Namespacing.** It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
+* **Greppability.** Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
+
+### Modules
+
+If you have a simple-enough Django app with a bunch of services, they can all live happily in the `service.py` module.
+
+But when things get big, you might want to split `services.py` into a folder with sub-modules, depending on the different sub-domains that you are dealing with in your app.
+
+For example, lets say we have an `authentication` app, where we have 1 sub-module in our `services` module, that deals with `jwt`, and one sub-module that deals with `oauth`.
+
+The structure may look like this:
+
+```
+services
+├── __init__.py
+├── jwt.py
+└── oauth.py
+```
+
+There are lots of flavors here:
+
+- You can do the import-export dance in `services/__init__.py`, so you can import from `project.authentication.services` everywhere else
+- You can create a folder-module, `jwt/__init__.py`, and put the code there.
+- Basically, the structure is up to you. If you feel it's time to restructure and refactor - do so.
+
+### Selectors
+
+In most of our projects, we distinguish between "Pushing data to the database" and "Pulling data from the database":
+
+1. Services take care of the push.
+1. **Selectors take care of the pull.**
+1. Selectors can be viewed as a "sub-layer" to services, that's specialized in fetching data.
+
+> If this idea does not resonate well with you, you can just have services for both "kinds" of operations.
+
+A selector follows the same rules as a service.
+
+For example, in a module `<your_app>/selectors.py`, we can have the following:
 
 ```python
-def get_users(*, fetched_by: User) -> Iterable[User]:
-    user_ids = get_visible_users_for(user=fetched_by)
+def user_list(*, fetched_by: User) -> Iterable[User]:
+    user_ids = user_get_visible_for(user=fetched_by)
 
     query = Q(id__in=user_ids)
 
     return User.objects.filter(query)
 ```
 
-As you can see, `get_visible_users_for` is another selector.
+As you can see, `user_get_visible_for` is another selector.
+
+You can return querysets, or lists or whatever makes sense to your specific case.
+
+### Testing
+
+Since services hold our business logic, they are an ideal candidate for tests.
+
+If you decide to cover the service layer with tests, we have few general rules of thumb to follow:
+
+1. The tests **should cover the business logic** in an exhaustive manner.
+1. The tests **should hit the database** - creating & reading from it.
+1. The tests **should mock async task calls & everything that goes outside the project.**
+
+When creating the required state for a given test, one can use a combination of:
+
+* Fakes (We recommend using [`faker`](https://github.com/joke2k/faker))
+* Other services, to create the required objects.
+* Special test utility & helper methods.
+* Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
+* Plain `Model.objects.create()` calls, if factories are not yet introduced in the project.
+* Usually, whatever suits you better.
+
+**Let's take a look at our service from the example:**
+
+```python
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from project.payments.selectors import items_get_for_user
+from project.payments.models import Item, Payment
+from project.payments.tasks import payment_charge
 
 
-### Naming convention
+def item_buy(
+    *,
+    item: Item,
+    user: User,
+) -> Payment:
+    if item in items_get_for_user(user=user):
+        raise ValidationError(f'Item {item} already in {user} items.')
 
-Read the section in services. The same rules apply here.
+    payment = Payment.objects.create(
+        item=item,
+        user=user,
+        successful=False
+    )
+
+    payment_charge.delay(payment_id=payment.id)
+
+    return payment
+```
+
+The service:
+
+* Calls a selector for validation.
+* Creates an object.
+* Delays a task.
+
+**Those are our tests:**
+
+```python
+from unittest.mock import patch
+
+from django.test import TestCase
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from django_styleguide.payments.services import item_buy
+from django_styleguide.payments.models import Payment, Item
+
+
+class ItemBuyTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='Test User')
+        self.item = Item.objects.create(
+            name='Test Item',
+            description='Test Item description',
+            price=10.15
+        )
+
+    @patch('project.payments.services.items_get_for_user')
+    def test_buying_item_that_is_already_bought_fails(self, items_get_for_user_mock):
+        """
+        Since we already have tests for `items_get_for_user`,
+        we can safely mock it here and give it a proper return value.
+        """
+        items_get_for_user_mock.return_value = [self.item]
+
+        with self.assertRaises(ValidationError):
+            item_buy(user=self.user, item=self.item)
+
+    @patch('project.payments.services.payment_charge.delay')
+    def test_buying_item_creates_a_payment_and_calls_charge_task(
+        self,
+        payment_charge_mock
+    ):
+        self.assertEqual(0, Payment.objects.count())
+
+        payment = item_buy(user=self.user, item=self.item)
+
+        self.assertEqual(1, Payment.objects.count())
+        self.assertEqual(payment, Payment.objects.first())
+
+        self.assertFalse(payment.successful)
+
+        payment_charge_mock.assert_called()
+```
+
 
 ## APIs & Serializers
 
@@ -1079,286 +1201,6 @@ If we are to split the `utils.py` module into submodules, the same will happen f
 * `project_name/common/tests/utils/test_files.py`
 
 We try to match the structure of our modules with the structure of their respective tests.
-
-### Example
-
-We have a demo `django_styleguide` project.
-
-#### Example models
-
-```python
-import uuid
-
-from django.db import models
-from django.contrib.auth.models import User
-from django.utils import timezone
-
-from djmoney.models.fields import MoneyField
-
-
-class Item(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-
-    price = MoneyField(
-        max_digits=14,
-        decimal_places=2,
-        default_currency='EUR'
-    )
-
-    def __str__(self):
-        return f'Item {self.id} / {self.name} / {self.price}'
-
-
-class Payment(models.Model):
-    item = models.ForeignKey(
-        Item,
-        on_delete=models.CASCADE,
-        related_name='payments'
-    )
-
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='payments'
-    )
-
-    successful = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return f'Payment for {self.item} / {self.user}'
-```
-
-#### Example selectors
-
-For implementation of `QuerySetType`, check `queryset_type.py`.
-
-```python
-from django.contrib.auth.models import User
-
-from django_styleguide.common.types import QuerySetType
-
-from django_styleguide.payments.models import Item
-
-
-def get_items_for_user(
-    *,
-    user: User
-) -> QuerySetType[Item]:
-    return Item.objects.filter(payments__user=user)
-```
-
-#### Example services
-
-```python
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-
-from django_styleguide.payments.selectors import get_items_for_user
-from django_styleguide.payments.models import Item, Payment
-from django_styleguide.payments.tasks import charge_payment
-
-
-def buy_item(
-    *,
-    item: Item,
-    user: User,
-) -> Payment:
-    if item in get_items_for_user(user=user):
-        raise ValidationError(f'Item {item} already in {user} items.')
-
-    payment = Payment.objects.create(
-        item=item,
-        user=user,
-        successful=False
-    )
-
-    charge_payment.delay(payment_id=payment.id)
-
-    return payment
-```
-
-### Testing services
-
-Service tests are the most important tests in the project. Usually, those are the heavier tests with most lines of code.
-
-General rule of thumb for service tests:
-
-* The tests should cover the business logic behind the services in an exhaustive manner.
-* The tests should hit the database - creating & reading from it.
-* The tests should mock async task calls & everything that goes outside the project.
-
-When creating the required state for a given test, one can use a combination of:
-
-* Fakes (We recommend using [`faker`](https://github.com/joke2k/faker))
-* Other services, to create the required objects.
-* Special test utility & helper methods.
-* Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
-* Plain `Model.objects.create()` calls, if factories are not yet introduced in the project.
-
-**Let's take a look at our service from the example:**
-
-```python
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-
-from django_styleguide.payments.selectors import get_items_for_user
-from django_styleguide.payments.models import Item, Payment
-from django_styleguide.payments.tasks import charge_payment
-
-
-def buy_item(
-    *,
-    item: Item,
-    user: User,
-) -> Payment:
-    if item in get_items_for_user(user=user):
-        raise ValidationError(f'Item {item} already in {user} items.')
-
-    payment = Payment.objects.create(
-        item=item,
-        user=user,
-        successful=False
-    )
-
-    charge_payment.delay(payment_id=payment.id)
-
-    return payment
-
-```
-
-The service:
-
-* Calls a selector for validation
-* Creates ORM object
-* Calls a task
-
-**Those are our tests:**
-
-```python
-from unittest.mock import patch
-
-from django.test import TestCase
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-
-from django_styleguide.payments.services import buy_item
-from django_styleguide.payments.models import Payment, Item
-
-
-class BuyItemTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username='Test User')
-        self.item = Item.objects.create(
-            name='Test Item',
-            description='Test Item description',
-            price=10.15
-        )
-
-        self.service = buy_item
-
-    @patch('django_styleguide.payments.services.get_items_for_user')
-    def test_buying_item_that_is_already_bought_fails(self, get_items_for_user_mock):
-        """
-        Since we already have tests for `get_items_for_user`,
-        we can safely mock it here and give it a proper return value.
-        """
-        get_items_for_user_mock.return_value = [self.item]
-
-        with self.assertRaises(ValidationError):
-            self.service(user=self.user, item=self.item)
-
-    @patch('django_styleguide.payments.services.charge_payment.delay')
-    def test_buying_item_creates_a_payment_and_calls_charge_task(
-        self,
-        charge_payment_mock
-    ):
-        self.assertEqual(0, Payment.objects.count())
-
-        payment = self.service(user=self.user, item=self.item)
-
-        self.assertEqual(1, Payment.objects.count())
-        self.assertEqual(payment, Payment.objects.first())
-
-        self.assertFalse(payment.successful)
-
-        charge_payment_mock.assert_called()
-```
-
-### Testing selectors
-
-Testing selectors is also an important part of every project.
-
-Sometimes, the selectors can be really straightforward, and if we have to "cut corners", we can omit those tests. But it the end, it's important to cover our selectors too.
-
-Let's take another look at our example selector:
-
-```python
-from django.contrib.auth.models import User
-
-from django_styleguide.common.types import QuerySetType
-
-from django_styleguide.payments.models import Item
-
-
-def get_items_for_user(
-    *,
-    user: User
-) -> QuerySetType[Item]:
-    return Item.objects.filter(payments__user=user)
-```
-
-As you can see, this is a very straightforward & simple selector. We can easily cover that with 2 to 3 tests.
-
-**Here are the tests:**
-
-```python
-from django.test import TestCase
-from django.contrib.auth.models import User
-
-from django_styleguide.payments.selectors import get_items_for_user
-from django_styleguide.payments.models import Item, Payment
-
-
-class GetItemsForUserTests(TestCase):
-    def test_selector_returns_nothing_for_user_without_items(self):
-        """
-        This is a "corner case" test.
-        We should get nothing if the user has no items.
-        """
-        user = User.objects.create_user(username='Test User')
-
-        expected = []
-        result = list(get_items_for_user(user=user))
-
-        self.assertEqual(expected, result)
-
-    def test_selector_returns_item_for_user_with_that_item(self):
-        """
-        This test will fail in case we change the model structure.
-        """
-        user = User.objects.create_user(username='Test User')
-
-        item = Item.objects.create(
-            name='Test Item',
-            description='Test Item description',
-            price=10.15
-        )
-
-        Payment.objects.create(
-            item=item,
-            user=user
-        )
-
-        expected = [item]
-        result = list(get_items_for_user(user=user))
-
-        self.assertEqual(expected, result)
-```
 
 ## Celery
 
