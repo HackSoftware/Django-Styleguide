@@ -623,13 +623,9 @@ from styleguide_example.users.models import BaseUser
 
 
 class UserListApi(APIView):
-    class OutputSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = BaseUser
-            fields = (
-                'id',
-                'email'
-            )
+    class OutputSerializer(serializers.Serializer):
+        id = serializers.CharField()
+        email = serializers.CharField()
 
     def get(self, request):
         users = user_list()
@@ -677,14 +673,10 @@ class UserListApi(ApiErrorsMixin, APIView):
         is_admin = serializers.NullBooleanField(required=False)
         email = serializers.EmailField(required=False)
 
-    class OutputSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = BaseUser
-            fields = (
-                'id',
-                'email',
-                'is_admin'
-            )
+    class OutputSerializer(serializers.Serializer):
+        id = serializers.CharField()
+        email = serializers.CharField()
+        is_admin = serializers.BooleanField()
 
     def get(self, request):
         # Make sure the filters are valid, if passed
@@ -806,10 +798,11 @@ You can find the code for the example list API with filters & pagination in the 
 
 ```python
 class CourseDetailApi(SomeAuthenticationMixin, APIView):
-    class OutputSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Course
-            fields = ('id', 'name', 'start_date', 'end_date')
+    class OutputSerializer(serializers.Serializer):
+        id = serializers.CharField()
+        name = serializers.CharField()
+        start_date = serializers.DateField()
+        end_date = serializers.DateField()
 
     def get(self, request, course_id):
         course = get_course(id=course_id)
@@ -868,6 +861,10 @@ class Serializer(serializers.Serializer):
 ```
 
 The implementation of `inline_serializer` can be found [here](https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/common/utils.py#L34), in the [Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example) repo.
+
+### Advanced serialization
+
+*Coming soon*
 
 ## Urls
 
