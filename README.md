@@ -574,17 +574,32 @@ class ItemBuyTests(TestCase):
 
 When using services & selectors, all of your APIs should look simple & identical.
 
-General rules for an API is:
+**General rules for an API is:**
 
-* Do 1 API per operation. For CRUD on a model, this means 4 APIs.
-* Use the most simple `APIView` or `GenericAPIView`
-* Use services / selectors & don't do business logic in your API.
-* Use serializers for fetching objects from params - passed either via `GET` or `POST`
-* Serializer should be nested in the API and be named either `InputSerializer` or `OutputSerializer`
-  * `OutputSerializer` can subclass `ModelSerializer`, if needed.
-  * `InputSerializer` should always be a plain `Serializer`
-  * Reuse serializers as little as possible
-  * If you need a nested serializer, use the `inline_serializer` util
+* Have 1 API per operation. This means, for CRUD on a model, having 4 APIs.
+* Inherit from the most simple `APIView` or `GenericAPIView`.
+  * Avoid the more abstract classes, since they tend to manage things via serializers & we want to do that via services & selectors.
+* **Don't do business logic in your API.**
+* You can do object fetching / data manipulation in your APIs (potentially, you can extract that to somewhere else).
+  * If you are calling `some_service` in your API, you can extract data manipulation to `some_service_parse`.
+* Basically, keep the APIs are simple as possible. They are an interface towards your core business logic.
+
+When we are talking about APIs, we need a way to parse data in & parse data out.
+
+**Here are our rules for API serialization:**
+
+* There should be a dedicated **input serializer** & a dedicated **output serializer**.
+* **Input serializer** takes care of the data coming in.
+* **Output serializer** takes care of the data coming out.
+* Use whatever abstraction works for you, in terms of serialization.
+
+**In case you are using DRF's serializers, here are our rules:**
+
+* Serializer should be nested in the API and be named either `InputSerializer` or `OutputSerializer`.
+* Our preference is for both serializers to inherit from the simpler `serializer.Serializers` and avoid using `serializers.ModelSerializer`
+* If you need a nested serializer, use the `inline_serializer` util.
+* Reuse serializers as little as possible.
+  * Once you start reusing serializers by inheriting them, you'll be exposed to unexpected behaviors, when something in the base serializer changes.
 
 ### Naming convention
 
