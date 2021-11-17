@@ -27,13 +27,15 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
   * [Testing](#testing-1)
 - [APIs & Serializers](#apis--serializers)
   * [Naming convention](#naming-convention-1)
-  * [An example list API](#an-example-list-api)
+  * [List APIs](#list-apis)
     + [Plain](#plain)
     + [Filters + Pagination](#filters--pagination)
-  * [An example detail API](#an-example-detail-api)
-  * [An example create API](#an-example-create-api)
-  * [An example update API](#an-example-update-api)
+  * [Detail API](#detail-api)
+  * [Create API](#create-api)
+  * [Update API](#update-api)
+  * [Fetching objects](#fetching-objects)
   * [Nested serializers](#nested-serializers)
+  * [Advanced serialization](#advanced-serialization)
 - [Urls](#urls)
 - [Exception Handling](#exception-handling)
   * [Raising Exceptions in Services / Selectors](#raising-exceptions-in-services--selectors)
@@ -569,22 +571,37 @@ class ItemBuyTests(TestCase):
         payment_charge_mock.assert_called()
 ```
 
-
 ## APIs & Serializers
 
 When using services & selectors, all of your APIs should look simple & identical.
 
-General rules for an API is:
+**When we are creating new APIs, we follow those general rules:**
 
-* Do 1 API per operation. For CRUD on a model, this means 4 APIs.
-* Use the most simple `APIView` or `GenericAPIView`
-* Use services / selectors & don't do business logic in your API.
-* Use serializers for fetching objects from params - passed either via `GET` or `POST`
-* Serializer should be nested in the API and be named either `InputSerializer` or `OutputSerializer`
-  * `OutputSerializer` can subclass `ModelSerializer`, if needed.
-  * `InputSerializer` should always be a plain `Serializer`
-  * Reuse serializers as little as possible
-  * If you need a nested serializer, use the `inline_serializer` util
+* Have 1 API per operation. This means, for CRUD on a model, having 4 APIs.
+* Inherit from the most simple `APIView` or `GenericAPIView`.
+  * Avoid the more abstract classes, since they tend to manage things via serializers & we want to do that via services & selectors.
+* **Don't do business logic in your API.**
+* You can do **object fetching / data manipulation in your APIs** (potentially, you can extract that to somewhere else).
+  * If you are calling `some_service` in your API, you can extract object fetching / data manipulation to `some_service_parse`.
+* Basically, keep the APIs are simple as possible. They are an interface towards your core business logic.
+
+When we are talking about APIs, we need a way to deal with data serialization - both incoming & outgoing data.
+
+**Here are our rules for API serialization:**
+
+* There should be a dedicated **input serializer** & a dedicated **output serializer**.
+* **Input serializer** takes care of the data coming in.
+* **Output serializer** takes care of the data coming out.
+* In terms of serialization, Use whatever abstraction works for you.
+
+**In case you are using DRF's serializers, here are our rules:**
+
+* Serializer should be **nested in the API** and be named either `InputSerializer` or `OutputSerializer`.
+* Our preference is for both serializers to inherit from the simpler `Serializer` and avoid using `ModelSerializer`
+  * This is a matter of preference and choice. If `ModelSerializer` is working fine for you, use it.
+* If you need a nested serializer, use the `inline_serializer` util.
+* Reuse serializers as little as possible.
+  * Reusing serializers may expose you to unexpected behavior, when something changes in the base serializers.
 
 ### Naming convention
 
@@ -592,11 +609,11 @@ For our APIs we use the following naming convention: `<Entity><Action>Api`.
 
 Here are few examples: `UserCreateApi`, `UserSendResetPasswordApi`, `UserDeactivateApi`, etc.
 
-### An example list API
+### List APIs
 
 #### Plain
 
-A dead-simple list API would look like that:
+A dead-simple list API should look like that:
 
 ```python
 from rest_framework.views import APIView
@@ -608,13 +625,9 @@ from styleguide_example.users.models import BaseUser
 
 
 class UserListApi(APIView):
-    class OutputSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = BaseUser
-            fields = (
-                'id',
-                'email'
-            )
+    class OutputSerializer(serializers.Serializer):
+        id = serializers.CharField()
+        email = serializers.CharField()
 
     def get(self, request):
         users = user_list()
@@ -624,7 +637,7 @@ class UserListApi(APIView):
         return Response(data)
 ```
 
-Keep in mind this API is public by default. Authentication is up to you.
+*Keep in mind this API is public by default. Authentication is up to you.*
 
 #### Filters + Pagination
 
@@ -637,9 +650,10 @@ That's why, we take the following approach:
 
 1. Selectors take care of the actual filtering.
 1. APIs take care of filter parameter serialization.
-1. APIs take care of pagination.
+1. If you need some of the generic paginations, provided by DRF, the API should take care of that.
+1. If you need a different pagination, or you are implementing it yourself, either add a new layer to handle pagination or let the selector do that for you.
 
-Let's look at the example:
+**Let's look at the example, where we rely on pagination, provided by DRF:**
 
 ```python
 from rest_framework.views import APIView
@@ -662,14 +676,10 @@ class UserListApi(ApiErrorsMixin, APIView):
         is_admin = serializers.NullBooleanField(required=False)
         email = serializers.EmailField(required=False)
 
-    class OutputSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = BaseUser
-            fields = (
-                'id',
-                'email',
-                'is_admin'
-            )
+    class OutputSerializer(serializers.Serializer):
+        id = serializers.CharField()
+        email = serializers.CharField()
+        is_admin = serializers.BooleanField()
 
     def get(self, request):
         # Make sure the filters are valid, if passed
@@ -717,9 +727,7 @@ def user_list(*, filters=None):
 
 As you can see, we are leveraging the powerful [`django-filter`](https://django-filter.readthedocs.io/en/stable/) library.
 
-But you can do whatever suits you best here. We have projects, where we implemented our own filtering layer & used it here.
-
-The key thing is - **selectors take care of filtering**.
+> 👀 The key thing here is that the selector is responsible for the filtering. You can always use something else, as a filtering abstaction. For most of the cases, `django-filter` is more than enough.
 
 Finally, let's look at `get_paginated_response`:
 
@@ -743,7 +751,7 @@ def get_paginated_response(*, pagination_class, serializer_class, queryset, requ
 
 This is basically a code, extracted from within DRF.
 
-Same goes for the `LimitOffsetPagination:
+Same goes for the `LimitOffsetPagination`:
 
 ```python
 from collections import OrderedDict
@@ -781,30 +789,35 @@ class LimitOffsetPagination(_LimitOffsetPagination):
         ]))
 ```
 
-What we basically did is reverse-engineered the generic APIs, since pagination should be able to live outside the layers of complexity there.
+What we basically did is reverse-engineered the generic APIs.
 
-**A possible future implementation should be able to paginate without needing the request / response of the APIView.**
+> 👀 Again, if you need something else for pagination, you can always implement it & use it in the same manner. There are cases, where the selector needs to take care of the pagination. We approach those cases the same way we approach filtering.
 
 You can find the code for the example list API with filters & pagination in the [Styleguide Example](https://github.com/HackSoftware/Styleguide-Example#example-list-api) project.
 
-### An example detail API
+### Detail API
+
+Here's an example:
 
 ```python
 class CourseDetailApi(SomeAuthenticationMixin, APIView):
-    class OutputSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Course
-            fields = ('id', 'name', 'start_date', 'end_date')
+    class OutputSerializer(serializers.Serializer):
+        id = serializers.CharField()
+        name = serializers.CharField()
+        start_date = serializers.DateField()
+        end_date = serializers.DateField()
 
     def get(self, request, course_id):
-        course = get_course(id=course_id)
+        course = course_get(id=course_id)
 
         serializer = self.OutputSerializer(course)
 
         return Response(serializer.data)
 ```
 
-### An example create API
+### Create API
+
+Here's an example:
 
 ```python
 class CourseCreateApi(SomeAuthenticationMixin, APIView):
@@ -817,12 +830,14 @@ class CourseCreateApi(SomeAuthenticationMixin, APIView):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        create_course(**serializer.validated_data)
+        course_create(**serializer.validated_data)
 
         return Response(status=status.HTTP_201_CREATED)
 ```
 
-### An example update API
+### Update API
+
+Here's an example:
 
 ```python
 class CourseUpdateApi(SomeAuthenticationMixin, APIView):
@@ -835,10 +850,40 @@ class CourseUpdateApi(SomeAuthenticationMixin, APIView):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        update_course(course_id=course_id, **serializer.validated_data)
+        course_update(course_id=course_id, **serializer.validated_data)
 
         return Response(status=status.HTTP_200_OK)
 ```
+
+### Fetching objects
+
+When our APIs receive an `object_id`, the question that arises is: **Where should we fetch that object?**
+
+We have several options:
+
+1. We can pass that object to a serializer, which has a [`PrimaryKeyRelatedField`](https://www.django-rest-framework.org/api-guide/relations/#primarykeyrelatedfield) (or a [`SlugRelatedField`](https://www.django-rest-framework.org/api-guide/relations/#slugrelatedfield) for that matter)
+1. We can do some kind of object fetching in the API & pass the object to a service or a selector.
+1. We can pass the id to the service / selector and do the object fetching there.
+
+What approach we take is a matter of project context & preference.
+
+What we usually do is to fetch objects on the API level, using a special `get_object` util:
+
+```python
+def get_object(model_or_queryset, **kwargs):
+    """
+    Reuse get_object_or_404 since the implementation supports both Model && queryset.
+    Catch Http404 & return None
+    """
+    try:
+        return get_object_or_404(model_or_queryset, **kwargs)
+    except Http404:
+        return None
+```
+
+This is a very basic utility, that handles the exception and returns `None` instead.
+
+Whatever you do, make sure to keep it consistent.
 
 ### Nested serializers
 
@@ -853,6 +898,82 @@ class Serializer(serializers.Serializer):
 ```
 
 The implementation of `inline_serializer` can be found [here](https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/common/utils.py#L34), in the [Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example) repo.
+
+### Advanced serialization
+
+Sometimes, the end result of an API can be quite complex. Sometimes, we want to optimize the queries that we do and the optimization itself can be quite complex.
+
+Trying to stick with just an `OutputSerializer` in that case might limit our options.
+
+In those cases, we can implement our output serialization as a function, and have the optimizations we need there, **instead of having all the optimizations in the selector.**
+
+Lets take this API as an example:
+
+```python
+class SomeGenericFeedApi(BaseApi):
+    def get(self, request):
+        feed = some_feed_get(
+            user=request.user,
+        )
+
+        data = some_feed_serialize(feed)
+
+        return Response(data)
+```
+
+In this scenario, `some_feed_get` has the responsibility of returning a list of feed items (can be ORM objects, can be just IDs, can be whatever works for you).
+
+And we want to push the complexity of serializing this feed, in an optimal manner, to the serializer function - `some_feed_serialize`.
+
+This means we don't have to do any unnecessary prefetches & optimizations in `some_feed_get`.
+
+Here's an example of `some_feed_serialize`:
+
+```python
+class FeedItemSerializer(serializers.Serializer):
+    ... some fields here ...
+    calculated_field = serializers.IntegerField(source="_calculated_field")
+
+
+def some_feed_serialize(feed: List[FeedItem]):
+    feed_ids = [feed_item.id for feed_item in feed]
+
+    # Refetch items with more optimizations
+    # Based on the relations that are going in
+    objects = FeedItem.objects.select_related(
+      # ... as complex as you want ...
+    ).prefetch_related(
+      # ... as complex as you want ...
+    ).filter(
+      id__in=feed_ids
+    ).order_by(
+      "-some_timestamp"
+    )
+
+    some_cache = get_some_cache(feed_ids)
+
+    result = []
+
+    for feed_item in objects:
+        # An example, adding additional fields for the serializer
+        # That are based on values outside of our current object
+        # This may be some optimization to save queries
+        feed_item._calculated_field = some_cache.get(feed_item.id)
+
+        result.append(FeedItemSerializer(feed_item).data)
+
+    return result
+```
+
+As you can see, this is a pretty generic example, but the idea is simple:
+
+1. Refetch your data, with the needed joins & prefetches.
+1. Fetch or build in-memory caches, that will save you queries for specific computed values.
+1. Return a result, that's ready to be an API response.
+
+Even though this is labeled as "advanced serialization", the pattern is really powerful and can be used for all serializations.
+
+Such serializer functions usually live in a `serializers.py` module, in the corresponding Django app.
 
 ## Urls
 
