@@ -44,7 +44,7 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
   * [Describe how your API errors are going to look like.](#describe-how-your-api-errors-are-going-to-look-like)
   * [Know how to change the default exception handling behavior.](#know-how-to-change-the-default-exception-handling-behavior)
   * [Approach 1 - Use DRF's default exceptions, with very little modifications.](#approach-1---use-drfs-default-exceptions-with-very-little-modifications)
-  * [HackSoft's proposed approach](#hacksofts-proposed-approach)
+  * [Approach 2 - HackSoft's proposed way](#approach-2---hacksofts-proposed-way)
 - [Testing](#testing-2)
   * [Naming conventions](#naming-conventions)
 - [Celery](#celery)
@@ -1471,7 +1471,7 @@ Response:
 }
 ```
 
-### HackSoft's proposed approach
+### Approach 2 - HackSoft's proposed way
 
 We are going to propose an approach, that can be easily extended into something that works well for you.
 
