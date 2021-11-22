@@ -37,10 +37,14 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
   * [Nested serializers](#nested-serializers)
   * [Advanced serialization](#advanced-serialization)
 - [Urls](#urls)
-- [Exception Handling](#exception-handling)
-  * [Raising Exceptions in Services / Selectors](#raising-exceptions-in-services--selectors)
-  * [Handle Exceptions in APIs](#handle-exceptions-in-apis)
-  * [Error formatting](#error-formatting)
+- [Errors & Exception Handling](#errors--exception-handling)
+  * [How exception handling works (in the context of DRF)](#how-exception-handling-works-in-the-context-of-drf)
+    + [DRF's `ValidationError`](#drfs-validationerror)
+    + [Django's `ValidationError`](#djangos-validationerror)
+  * [Describe how your API errors are going to look like.](#describe-how-your-api-errors-are-going-to-look-like)
+  * [Know how to change the default exception handling behavior.](#know-how-to-change-the-default-exception-handling-behavior)
+  * [Approach 1 - Use DRF's default exceptions, with very little modifications.](#approach-1---use-drfs-default-exceptions-with-very-little-modifications)
+  * [Approach 2 - HackSoft's proposed way](#approach-2---hacksofts-proposed-way)
 - [Testing](#testing-2)
   * [Naming conventions](#naming-conventions)
 - [Celery](#celery)
@@ -1014,250 +1018,806 @@ urlpatterns = [
 
 **Splitting urls like that can give you the extra flexibility to move separate domain patterns to separate modules**, especially for really big projects, where you'll often have merge conflicts in `urls.py`.
 
-## Exception Handling
+## Errors & Exception Handling
 
-### Raising Exceptions in Services / Selectors
+Errors & exception handling is a big topic & quite often - the details are specific for a given project.
 
-Now we have a separation between our HTTP interface & the core logic of our application.
+That's why we'll split things into two - **general guidelines**, followed by some **specific approaches** for error handling.
 
-To keep this separation of concerns, our services and selectors must not use the `rest_framework.exception` classes because they are bounded with HTTP status codes.
+**Our general guidelines are:**
 
-Our services and selectors must use one of:
+1. Know how exception handling works (we'll give context for Django Rest Framework).
+1. Describe how your API errors are going to look like.
+1. Know how to change the default exception handling behavior.
 
-* [Python built-in exceptions](https://docs.python.org/3/library/exceptions.html)
-* Exceptions from `django.core.exceptions`
-* Custom exceptions, inheriting from the ones above.
+**Followed by some specific approaches:**
 
-Here is a good example of service that performs some validation and raises `django.core.exceptions.ValidationError`:
+1. Use DRF's default exceptions, with very little modifications.
+1. HackSoft's proposed approach.
+
+### How exception handling works (in the context of DRF)
+
+DRF has an excellent guide on how exceptions are being handled, so make sure to read it first - <https://www.django-rest-framework.org/api-guide/exceptions/>
+
+Additonally, here's a neat diadgram with an overview of the process:
+
+![Exception handler (1)](https://user-images.githubusercontent.com/387867/142426205-2c0356e6-ce20-425e-a811-072c3334edb0.png)
+
+Basically, if the exception handler cannot handle the given exception & returns `None`, this will result in an unhandled exception & a `500 Server Error`. This is often good, because you won't be silencing errors, that you need to pay attention to.
+
+**Now, there are some quirks, that we need to pay attention to.**
+
+#### DRF's `ValidationError`
+
+For example, if we simply raise a `rest_framework.exceptions.ValidationError` like that:
 
 ```python
-from django.core.exceptions import ValidationError
+from rest_framework import exceptions
 
 
-def create_topic(*, name: str, course: Course) -> Topic:
-    if course.end_date < timezone.now():
-       raise ValidationError('You can not create topics for course that has ended.')
-
-    topic = Topic.objects.create(name=name, course=course)
-
-    return topic
+def some_service():
+    raise ValidationError("Error message here.")
 ```
 
-### Handle Exceptions in APIs
+The response payload is going to look like this:
 
-To transform the exceptions raised in the services or selectors, to a standard HTTP response, you need to catch the exception and raise something that the rest framework understands.
-
-The best place to do this is in the `handle_exception` method of the `APIView`. There you can map your Python/Django exception to a DRF exception.
-
-By default, the [`handle_exception` method implementation in DRF](https://www.django-rest-framework.org/api-guide/exceptions/#exception-handling-in-rest-framework-views) handles Django's built-in `Http404` and `PermissionDenied` exceptions, thus there is no need for you to handle it by hand.
-
-Here is an example:
-
-```python
-from rest_framework import exceptions as rest_exceptions
-
-from django.core.exceptions import ValidationError
-
-
-class CourseCreateApi(SomeAuthenticationMixin, APIView):
-    expected_exceptions = {
-        ValidationError: rest_exceptions.ValidationError
-    }
-
-    class InputSerializer(serializers.Serializer):
-        ...
-
-    def post(self, request):
-        serializer = self.InputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        create_course(**serializer.validated_data)
-
-        return Response(status=status.HTTP_201_CREATED)
-
-    def handle_exception(self, exc):
-        if isinstance(exc, tuple(self.expected_exceptions.keys())):
-            drf_exception_class = self.expected_exceptions[exc.__class__]
-            drf_exception = drf_exception_class(get_error_message(exc))
-
-            return super().handle_exception(drf_exception)
-
-        return super().handle_exception(exc)
-```
-
-Here's the implementation of `get_error_message`:
-
-```python
-def get_first_matching_attr(obj, *attrs, default=None):
-    for attr in attrs:
-        if hasattr(obj, attr):
-            return getattr(obj, attr)
-
-    return default
-
-
-def get_error_message(exc):
-    if hasattr(exc, 'message_dict'):
-        return exc.message_dict
-    error_msg = get_first_matching_attr(exc, 'message', 'messages')
-
-    if isinstance(error_msg, list):
-        error_msg = ', '.join(error_msg)
-
-    if error_msg is None:
-        error_msg = str(exc)
-
-    return error_msg
-```
-
-You can move this code to a mixin and use it in every API to prevent code duplication.
-
-We call this `ApiErrorsMixin`. Here's a sample implementation from one of our projects:
-
-```python
-from rest_framework import exceptions as rest_exceptions
-
-from django.core.exceptions import ValidationError
-
-from project.common.utils import get_error_message
-
-
-class ApiErrorsMixin:
-    """
-    Mixin that transforms Django and Python exceptions into rest_framework ones.
-    Without the mixin, they return 500 status code which is not desired.
-    """
-    expected_exceptions = {
-        ValueError: rest_exceptions.ValidationError,
-        ValidationError: rest_exceptions.ValidationError,
-        PermissionError: rest_exceptions.PermissionDenied
-    }
-
-    def handle_exception(self, exc):
-        if isinstance(exc, tuple(self.expected_exceptions.keys())):
-            drf_exception_class = self.expected_exceptions[exc.__class__]
-            drf_exception = drf_exception_class(get_error_message(exc))
-
-            return super().handle_exception(drf_exception)
-
-        return super().handle_exception(exc)
-```
-
-Having this mixin in mind, our API can be written like that:
-
-```python
-class CourseCreateApi(
-    SomeAuthenticationMixin,
-    ApiErrorsMixin,
-    APIView
-):
-    class InputSerializer(serializers.Serializer):
-        ...
-
-    def post(self, request):
-        serializer = self.InputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        create_course(**serializer.validated_data)
-
-        return Response(status=status.HTTP_201_CREATED)
-```
-
-All of the code above can be found in [here](https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/api/mixins.py#L70), in the [Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example) repo.
-
-### Error formatting
-
-The next step is to generalize the format of the errors we get from our APIs. This will ease the process of displaying errors to the end-user, via JavaScript.
-
-If we have a standard serializer and there is an error with one of the fields, the message we get by default looks like this:
-
-```python
-{
-    "url": [
-        "This field is required."
-    ]
-}
-```
-
-If we have a validation error with just a message - `raise ValidationError('Something is wrong.')` - it will look like this:
-
-```python
+```json
 [
-    "some error"
+    "Some message"
 ]
 ```
 
-Another error format may look like this:
+This looks strange, because if we do it like this:
 
 ```python
+from rest_framework import exceptions
+
+
+def some_service():
+    raise exceptions.ValidationError({"error": "Some message"})
+```
+
+The response payload is going to look like this:
+
+```json
 {
-    "detail": "Method \"GET\" not allowed."
+    "error": "Some message"
 }
 ```
 
-**Those are 3 different ways of formatting for our errors.** What we want to have is a single format, for all errors.
+That's basically what we passed as the `detail` of the `ValidationError`. But it's a different data structure from the initial array.
 
-Luckily, DRF provides a way for us to give our own custom exception handler, where we can implement the desired formatting: <https://www.django-rest-framework.org/api-guide/exceptions/#custom-exception-handling>
-
-In our projects, we format the errors like that:
+Now, if we decide to raise another of the DRF's built-in exceptions:
 
 ```python
+from rest_framework import exceptions
+
+
+def some_service():
+    raise exceptions.NotFound()
+```
+
+The response payload is going to look like this:
+
+```json
 {
-  "errors": [
-    {
-      "message": "Error message",
-      "code": "Some code",
-      "field": "field_name"
-    },
-    {
-      "message": "Error message",
-      "code": "Some code",
-      "field": "nested.field_name"
-    },
-    ]
+    "detail": "Not found."
 }
 ```
 
-If we raise a `ValidationError`, then the field is optional.
+That's entirely different from what we saw as behavior from the `ValidationError` and this might cause problems.
 
-In order to achieve that, we implement a custom exception handler:
+So far, the default DRF behavior can get us:
+
+- An array.
+- A dictionarry.
+- A specific `{"detail": "something"}` result.
+
+**So if we need to use the default DRF behavior, we need to take care of this inconsistency.**
+
+#### Django's `ValidationError`
+
+Now, DRF's default exception handling is not playing nice with Django's `ValidationError`.
+
+This piece of code:
 
 ```python
+from django.core.exceptions import ValidationError as DjangoValidationError
+
+
+def some_service():
+    raise DjangoValidationError("Some error message")
+```
+
+Will result in an unhandled exception, causing `500 Server Error`.
+
+This will also happen if this `ValidationError` comes from model validation, for example:
+
+```python
+def some_service():
+    user = BaseUser()
+    user.full_clean()  # Throws ValidationError
+    user.save()
+```
+
+This will also result in `500 Server Error`.
+
+If we want to start handling this, as if it was `rest_framework.exceptions.ValidationError`, we need to roll-out our own [custom exception handler](https://www.django-rest-framework.org/api-guide/exceptions/#custom-exception-handling):
+
+```python
+from django.core.exceptions import ValidationError as DjangoValidationError
+
 from rest_framework.views import exception_handler
+from rest_framework.serializers import as_serializer_error
+from rest_framework import exceptions
 
 
-def exception_errors_format_handler(exc, context):
-    response = exception_handler(exc, context)
+def custom_exception_handler(exc, ctx):
+    if isinstance(exc, DjangoValidationError):
+        exc = exceptions.ValidationError(as_serializer_error(exc))
 
-    # If an unexpected error occurs (server error, etc.)
+    response = exception_handler(exc, ctx)
+
+    # If unexpected error occurs (server error, etc.)
     if response is None:
         return response
-
-    formatter = ErrorsFormatter(exc)
-
-    response.data = formatter()
 
     return response
 ```
 
-which needs to be added to the `REST_FRAMEWORK` project settings:
+This is basically the default implementation, with the addition of this piece of code:
 
 ```python
-REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'project.app.handlers.exception_errors_format_handler',
-    ...
+if isinstance(exc, DjangoValidationError):
+    exc = exceptions.ValidationError(as_serializer_error(exc))
+```
+
+Since we need to map between `django.core.exceptions.ValidationError` and `rest_framework.exceptions.ValidationError`, we are using DRF's `as_serializer_error`, which is used internally in the serializers, just for that.
+
+With that, we can now have Django's `ValidationError` playing nice with DRF's exception handler.
+
+### Describe how your API errors are going to look like.
+
+This is very important and should be done as early as possible in any given project.
+
+This is basically agreening upon what the interface of your API errors - **How an error is going to look like as an API response?**
+
+This is very project specific, you can use some of the popular APIs for inspiration:
+
+- Stripe - <https://stripe.com/docs/api/errors>
+
+As an example, we might decide that our errors are going to look like this:
+
+1. `4**` and `5**` status codes for different types of errors.
+1. Each error will be a dictionarry with a single `message` key, containing the error message.
+
+```json
+{
+    "message": "Some error message here"
 }
 ```
 
-**The magic happens in the `ErrorsFormatter` class.**
+That's simple enough:
 
-The implementation of that class can be found [here](https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/api/errors.py), in the [Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example) repo.
+- `400` will be used for validation errors.
+- `401` for auth errors.
+- `403` for permission errors.
+- `404` for not found errors.
+- `429` for throttling errors.
+- `500` for server errors (we need to be careful not to silence an exception causing 500 and always report that in services like Sentry)
 
-Combining `ApiErrorsMixin`, the custom exception handler & the errors formatter class, we can have predictable behavior in our APIs, when it comes to errors.
+Again, this is up to you & it's specific to the project. **We'll propose something similiar for one of the specific approaches.**
 
-**A note:**
+### Know how to change the default exception handling behavior.
 
-> We've moved away from this particular way of formatting errors & we'll be updating the styleguide with a more generic approach.
+This is also important, because when you decide how your errors are going to look like, you need to implement this as custom exception handling.
+
+We've already provided an example for that in the paragraph above, talking about Django's `ValidationError`.
+
+We'll also provide additional examples in the sections below.
+
+### Approach 1 - Use DRF's default exceptions, with very little modifications.
+
+DRF's error handling is good. It'd be great, if the end result was always consistent. Those are the little modifications that we are going to do.
+
+We want to end up with errors, always looking like that:
+
+```json
+{
+    "detail": "Some error"
+}
+```
+
+or
+
+```json
+{
+    "detail": ["Some error", "Another error"]
+}
+```
+
+or
+
+```json
+{
+    "detail": {  "key": "... some arbitrary nested structure ..." }
+}
+```
+
+Basically, make sure we always have a dictionary with a `detail` key.
+
+Additonally, we want to handle Django's `ValidationError` as well.
+
+In order to achieve that, this is how our custom exception handler is going to look like:
+
+```python
+from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
+from django.http import Http404
+
+from rest_framework.views import exception_handler
+from rest_framework import exceptions
+from rest_framework.serializers import as_serializer_error
+
+
+def drf_default_with_modifications_exception_handler(exc, ctx):
+    if isinstance(exc, DjangoValidationError):
+        exc = exceptions.ValidationError(as_serializer_error(exc))
+
+    if isinstance(exc, Http404):
+        exc = exceptions.NotFound()
+
+    if isinstance(exc, PermissionDenied):
+        exc = exceptions.PermissionDenied()
+
+    response = exception_handler(exc, ctx)
+
+    # If unexpected error occurs (server error, etc.)
+    if response is None:
+        return response
+
+    if isinstance(exc.detail, (list, dict)):
+        response.data = {
+            "detail": response.data
+        }
+
+    return response
+```
+
+We kind-of replicate the original exception handler, so we can deal with an `APIException` after that (looking for `detail`).
+
+Now, lets run a set of tests:
+
+Code:
+
+```python
+def some_service():
+    raise DjangoValidationError("Some error message")
+```
+
+Response:
+
+```json
+{
+    "detail": {
+        "non_field_errors": [
+            "Some error message"
+        ]
+    }
+}
+```
+
+---
+
+Code:
+
+```python
+from django.core.exceptions import PermissionDenied
+
+def some_service():
+    raise PermissionDenied()
+```
+
+Response:
+
+```json
+{
+    "detail": "You do not have permission to perform this action."
+}
+```
+
+---
+
+Code:
+
+```python
+from django.http import Http404
+
+def some_service():
+    raise Http404()
+```
+
+Response:
+
+```json
+{
+    "detail": "Not found."
+}
+```
+
+---
+
+Code:
+
+```python
+def some_service():
+    raise RestValidationError("Some error message")
+```
+
+Response:
+
+```json
+{
+    "detail": [
+        "Some error message"
+    ]
+}
+```
+
+---
+
+Code:
+
+```python
+def some_service():
+    raise RestValidationError(detail={"error": "Some error message"})
+```
+
+Response:
+
+```json
+{
+    "detail": {
+        "error": "Some error message"
+    }
+}
+```
+
+---
+
+Code:
+
+```python
+class NestedSerializer(serializers.Serializer):
+    bar = serializers.CharField()
+
+
+class PlainSerializer(serializers.Serializer):
+    foo = serializers.CharField()
+    email = serializers.EmailField(min_length=200)
+
+    nested = NestedSerializer()
+
+
+def some_service():
+    serializer = PlainSerializer(data={
+        "email": "foo",
+        "nested": {}
+    })
+    serializer.is_valid(raise_exception=True)
+
+```
+
+Response:
+
+```json
+{
+    "detail": {
+        "foo": [
+            "This field is required."
+        ],
+        "email": [
+            "Ensure this field has at least 200 characters.",
+            "Enter a valid email address."
+        ],
+        "nested": {
+            "bar": [
+                "This field is required."
+            ]
+        }
+    }
+}
+```
+
+---
+
+Code:
+
+```python
+from rest_framework import exceptions
+
+
+def some_service():
+    raise exceptions.Throttled()
+```
+
+Response:
+
+```json
+{
+    "detail": "Request was throttled."
+}
+```
+
+---
+
+Code:
+
+```python
+def some_service():
+    user = BaseUser()
+    user.full_clean()
+```
+
+Response:
+
+```json
+{
+    "detail": {
+        "password": [
+            "This field cannot be blank."
+        ],
+        "email": [
+            "This field cannot be blank."
+        ]
+    }
+}
+```
+
+### Approach 2 - HackSoft's proposed way
+
+We are going to propose an approach, that can be easily extended into something that works well for you.
+
+**Here are the key ideas:**
+
+1. **Your application will have its own hierarchy of exceptions**, that are going to be thrown by the business logic.
+1. Lets say, for simplicity, that we are going to have only 1 error - `ApplicationError`.
+    - This is going to be defined in a special `core` app, within `exceptions` module. Basically, having `project.core.exceptions.ApplicationError`.
+1. We want to let DRF handle everything else, by default.
+1. `ValidationError` is now special and it's going to be handled differently.
+    - `ValidationError` should only come from either serializer or a model validation.
+
+---
+
+**We are going to define the following structure for our errors:**
+
+```json
+{
+    "message": "The error message here",
+    "extra": {}
+}
+```
+
+The `extra` key can hold arbitrary data, for the purposes of passing information to the frontend.
+
+For example, whenerver we have a `ValidationError` (usually coming from a Serializer or a Model), we are going to present the error like that:
+
+```json
+{
+    "message": "Validation error.",
+    "extra": {
+        "fields": {
+              "password": [
+                  "This field cannot be blank."
+              ],
+              "email": [
+                  "This field cannot be blank."
+              ]
+        }
+    },
+}
+```
+
+This can be communicated with the frontend, so they can look for `extra.fields`, to present those specific errors to the user.
+
+In order to achieve that, the custom exception handler is going to look like this:
+
+```python
+from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
+from django.http import Http404
+
+from rest_framework.views import exception_handler
+from rest_framework import exceptions
+from rest_framework.serializers import as_serializer_error
+from rest_framework.response import Response
+
+from styleguide_example.core.exceptions import ApplicationError
+
+
+def hacksoft_proposed_exception_handler(exc, ctx):
+    """
+    {
+        "message": "Error message",
+        "extra": {}
+    }
+    """
+    if isinstance(exc, DjangoValidationError):
+        exc = exceptions.ValidationError(as_serializer_error(exc))
+
+    if isinstance(exc, Http404):
+        exc = exceptions.NotFound()
+
+    if isinstance(exc, PermissionDenied):
+        exc = exceptions.PermissionDenied()
+
+    response = exception_handler(exc, ctx)
+
+    # If unexpected error occurs (server error, etc.)
+    if response is None:
+        if isinstance(exc, ApplicationError):
+            data = {
+                "message": exc.message,
+                "extra": exc.extra
+            }
+            return Response(data, status=400)
+
+        return response
+
+    if isinstance(exc.detail, (list, dict)):
+        response.data = {
+            "detail": response.data
+        }
+
+    if isinstance(exc, exceptions.ValidationError):
+        response.data["message"] = "Validation error"
+        response.data["extra"] = {
+            "fields": response.data["detail"]
+        }
+    else:
+        response.data["message"] = response.data["detail"]
+        response.data["extra"] = {}
+
+    del response.data["detail"]
+
+    return response
+```
+
+Take a look at that code & try to understand what's going on. **The strategy is - reuse as much as possible from DRF & then adjust.**
+
+Now, we are going to have the following behavior:
+
+Code:
+
+```python
+from styleguide_example.core.exceptions import ApplicationError
+
+
+def trigger_application_error():
+    raise ApplicationError(message="Something is not correct", extra={"type": "RANDOM"})
+```
+
+Response:
+
+```json
+{
+    "message": "Something is not correct",
+    "extra": {
+        "type": "RANDOM"
+    }
+}
+```
+---
+
+Code:
+
+```python
+def some_service():
+    raise DjangoValidationError("Some error message")
+```
+
+Response:
+
+```json
+{
+    "message": "Validation error",
+    "extra": {
+        "fields": {
+            "non_field_errors": [
+                "Some error message"
+            ]
+        }
+    }
+}
+```
+
+---
+
+Code:
+
+```python
+from django.core.exceptions import PermissionDenied
+
+def some_service():
+    raise PermissionDenied()
+```
+
+Response:
+
+```json
+{
+    "message": "You do not have permission to perform this action.",
+    "extra": {}
+}
+```
+
+---
+
+Code:
+
+```python
+from django.http import Http404
+
+def some_service():
+    raise Http404()
+```
+
+Response:
+
+```json
+{
+    "message": "Not found.",
+    "extra": {}
+}
+```
+
+---
+
+Code:
+
+```python
+def some_service():
+    raise RestValidationError("Some error message")
+```
+
+Response:
+
+```json
+{
+    "message": "Validation error",
+    "extra": {
+        "fields": [
+            "Some error message"
+        ]
+    }
+}
+```
+
+---
+
+Code:
+
+```python
+def some_service():
+    raise RestValidationError(detail={"error": "Some error message"})
+```
+
+Response:
+
+```json
+{
+    "message": "Validation error",
+    "extra": {
+        "fields": {
+            "error": "Some error message"
+        }
+    }
+}
+```
+
+---
+
+Code:
+
+```python
+class NestedSerializer(serializers.Serializer):
+    bar = serializers.CharField()
+
+
+class PlainSerializer(serializers.Serializer):
+    foo = serializers.CharField()
+    email = serializers.EmailField(min_length=200)
+
+    nested = NestedSerializer()
+
+
+def some_service():
+    serializer = PlainSerializer(data={
+        "email": "foo",
+        "nested": {}
+    })
+    serializer.is_valid(raise_exception=True)
+
+```
+
+Response:
+
+```json
+{
+    "message": "Validation error",
+    "extra": {
+        "fields": {
+            "foo": [
+                "This field is required."
+            ],
+            "email": [
+                "Ensure this field has at least 200 characters.",
+                "Enter a valid email address."
+            ],
+            "nested": {
+                "bar": [
+                    "This field is required."
+                ]
+            }
+        }
+    }
+}
+```
+
+---
+
+Code:
+
+```python
+from rest_framework import exceptions
+
+
+def some_service():
+    raise exceptions.Throttled()
+```
+
+Response:
+
+```json
+{
+    "message": "Request was throttled.",
+    "extra": {}
+}
+```
+
+---
+
+Code:
+
+```python
+def some_service():
+    user = BaseUser()
+    user.full_clean()
+```
+
+Response:
+
+```json
+{
+    "message": "Validation error",
+    "extra": {
+        "fields": {
+            "password": [
+                "This field cannot be blank."
+            ],
+            "email": [
+                "This field cannot be blank."
+            ]
+        }
+    }
+}
+```
+---
+
+Now, this can be extended & made to better suit your needs:
+
+1. You can have `ApplicationValidationError` and `ApplicationPermissionError`, as an additional hierarchy.
+1. You can reimplement DRF's default exception handler, instead of reusing it (copy-paste it & adjust to your needs).
+
+**The general idea is - figure out what kind of error handling you need and then implement it accordingly.**
 
 ## Testing
 
