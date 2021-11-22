@@ -45,6 +45,7 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
   * [Know how to change the default exception handling behavior.](#know-how-to-change-the-default-exception-handling-behavior)
   * [Approach 1 - Use DRF's default exceptions, with very little modifications.](#approach-1---use-drfs-default-exceptions-with-very-little-modifications)
   * [Approach 2 - HackSoft's proposed way](#approach-2---hacksofts-proposed-way)
+  * [More ideas](#more-ideas)
 - [Testing](#testing-2)
   * [Naming conventions](#naming-conventions)
 - [Celery](#celery)
@@ -1818,6 +1819,14 @@ Now, this can be extended & made to better suit your needs:
 1. You can reimplement DRF's default exception handler, instead of reusing it (copy-paste it & adjust to your needs).
 
 **The general idea is - figure out what kind of error handling you need and then implement it accordingly.**
+
+### More ideas
+
+As you can see, we can mold exception handling to our needs.
+
+You can start handling more stuff - for example - translating `django.core.exceptions.ObjectDoesNotExist` to `rest_framework.exceptions.NotFound`.
+
+You can even handle all exceptions, but then, you should be sure those exceptions are being logged properly, otherwise you might silence something that's important.
 
 ## Testing
 
