@@ -1022,15 +1022,15 @@ urlpatterns = [
 
 Errors & exception handling is a big topic & quite often - the details are specific for a given project.
 
-That's why we'll split things into 2 - **general guidelines**, followed by some **specific approaches** for error handling.
+That's why we'll split things into two - **general guidelines**, followed by some **specific approaches** for error handling.
 
-Our general guidelines are:
+**Our general guidelines are:**
 
 1. Know how exception handling works (we'll give context for Django Rest Framework).
 1. Describe how your API errors are going to look like.
 1. Know how to change the default exception handling behavior.
 
-Followed by some specific approaches:
+**Followed by some specific approaches:**
 
 1. Use DRF's default exceptions, with very little modifications.
 1. HackSoft's proposed approach.
@@ -1039,7 +1039,7 @@ Followed by some specific approaches:
 
 DRF has an excellent guide on how exceptions are being handled, so make sure to read it first - <https://www.django-rest-framework.org/api-guide/exceptions/>
 
-Additionally, we love to visualize with diagrams, so here's an overview of the process:
+Additonally, here's a neat diadgram with an overview of the process:
 
 ![Exception handler (1)](https://user-images.githubusercontent.com/387867/142426205-2c0356e6-ce20-425e-a811-072c3334edb0.png)
 
@@ -1107,11 +1107,13 @@ The response payload is going to look like this:
 
 That's entirely different from what we saw as behavior from the `ValidationError` and this might cause problems.
 
-So far, the default behavior can get us:
+So far, the default DRF behavior can get us:
 
 - An array.
 - A dictionarry.
 - A specific `{"detail": "something"}` result.
+
+**So if we need to use the default DRF behavior, we need to take care of this inconsistency.**
 
 #### Django's `ValidationError`
 
@@ -1170,7 +1172,7 @@ if isinstance(exc, DjangoValidationError):
     exc = exceptions.ValidationError(as_serializer_error(exc))
 ```
 
-Now, since we need to map between `django.core.exceptions.ValidationError` and `rest_framework.exceptions.ValidationError`, we are using DRF's `as_serializer_error`, which is used internally in the serializers, just for that.
+Since we need to map between `django.core.exceptions.ValidationError` and `rest_framework.exceptions.ValidationError`, we are using DRF's `as_serializer_error`, which is used internally in the serializers, just for that.
 
 With that, we can now have Django's `ValidationError` playing nice with DRF's exception handler.
 
@@ -1178,7 +1180,7 @@ With that, we can now have Django's `ValidationError` playing nice with DRF's ex
 
 This is very important and should be done as early as possible in any given project.
 
-This is basically agreening upon what the interface of your API errors - how an error is going to look like?
+This is basically agreening upon what the interface of your API errors - **How an error is going to look like as an API response?**
 
 This is very project specific, you can use some of the popular APIs for inspiration:
 
@@ -1475,14 +1477,18 @@ Response:
 
 We are going to propose an approach, that can be easily extended into something that works well for you.
 
-Here are the major ideas:
+**Here are the key ideas:**
 
-1. Your application will have own hierarchy of exceptions, that are going to be thrown by the business logic.
+1. **Your application will have its own hierarchy of exceptions**, that are going to be thrown by the business logic.
 1. Lets say, for simplicity, that we are going to have only 1 error - `ApplicationError`.
     - This is going to be defined in a special `core` app, within `exceptions` module. Basically, having `project.core.exceptions.ApplicationError`.
-1. We want let DRF handle everything else, by default, except for `ValidationError`. We are going to treat `ValidationError` as something related to a form (fields).
+1. We want to let DRF handle everything else, by default.
+1. `ValidationError` is now special and it's going to be handled differently.
+    - `ValidationError` should only come from either serializer or a model validation.
 
-We are going to define the following structure for our errors:
+---
+
+**We are going to define the following structure for our errors:**
 
 ```json
 {
@@ -1808,8 +1814,8 @@ Response:
 
 Now, this can be extended & made to better suit your needs:
 
-1. We can have `ApplicationValidationError` and `ApplicationPermissionError`, as an additional hierarchy.
-1. We can reimplement DRF's default exception handler, instead of reusing it (copy-paste it & adjust to your needs).
+1. You can have `ApplicationValidationError` and `ApplicationPermissionError`, as an additional hierarchy.
+1. You can reimplement DRF's default exception handler, instead of reusing it (copy-paste it & adjust to your needs).
 
 **The general idea is - figure out what kind of error handling you need and then implement it accordingly.**
 
