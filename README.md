@@ -1124,7 +1124,7 @@ if SENTRY_DSN:
     from sentry_sdk.integrations.celery import CeleryIntegration
 
     # ... we proceed with sentry settings here ...
-    # View the full file here - 
+    # View the full file here - https://github.com/HackSoftware/Styleguide-Example/blob/master/config/settings/sentry.py
 ```
 
 ### Reading from `.env`
