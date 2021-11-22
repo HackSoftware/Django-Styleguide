@@ -1099,7 +1099,7 @@ from config.settings.sentry import *  # noqa
 
 In a lot of examples, you'll see that environment variables are usually prefixed with `DJANGO_`. This is very helpful when there are other applications running alongside your Django app & reading from the same environment.
 
-We tend to prefix with `DJANGO_` only `DJANGO_SETTINGS_MODULE` and `DJANGO_DEBUG` & not prefix everything else.
+We tend to prefix with `DJANGO_` only `DJANGO_SETTINGS_MODULE` and `DJANGO_DEBUG` & not prefix anything else.
 
 This is mostly up to personal preference. **Just make sure you are consistent with that.**
 
