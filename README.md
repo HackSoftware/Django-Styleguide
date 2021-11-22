@@ -1021,6 +1021,8 @@ urlpatterns = [
 
 ## Errors & Exception Handling
 
+> 👀 If you want the code, hop to the `Styleguide-Example` project - <https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/api/exception_handlers.py>
+
 Errors & exception handling is a big topic & quite often - the details are specific for a given project.
 
 That's why we'll split things into two - **general guidelines**, followed by some **specific approaches** for error handling.
