@@ -2352,6 +2352,7 @@ project_name
 │   ├── __init__.py
 │   └── tests
 │       ├── __init__.py
+│       ├── factories.py
 │       ├── models
 │       │   └── __init__.py
 │       │   └── test_some_model_name.py
