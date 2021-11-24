@@ -852,33 +852,39 @@ from django_styleguide.payments.models import Payment, Item
 
 
 class ItemBuyTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username='Test User')
-        self.item = Item.objects.create(
-            name='Test Item',
-            description='Test Item description',
-            price=10.15
-        )
-
     @patch('project.payments.services.items_get_for_user')
     def test_buying_item_that_is_already_bought_fails(self, items_get_for_user_mock):
         """
         Since we already have tests for `items_get_for_user`,
         we can safely mock it here and give it a proper return value.
         """
-        items_get_for_user_mock.return_value = [self.item]
+        user = User(username='Test User')
+        item = Item(
+            name='Test Item',
+            description='Test Item description',
+            price=10.15
+        )
+
+        items_get_for_user_mock.return_value = [item]
 
         with self.assertRaises(ValidationError):
-            item_buy(user=self.user, item=self.item)
+            item_buy(user=user, item=item)
 
     @patch('project.payments.services.payment_charge.delay')
     def test_buying_item_creates_a_payment_and_calls_charge_task(
         self,
         payment_charge_mock
     ):
+        user = User.objects.create_user(username='Test User')
+        item = Item.objects.create(
+            name='Test Item',
+            description='Test Item description',
+            price=10.15
+        )
+
         self.assertEqual(0, Payment.objects.count())
 
-        payment = item_buy(user=self.user, item=self.item)
+        payment = item_buy(user=user, item=item)
 
         self.assertEqual(1, Payment.objects.count())
         self.assertEqual(payment, Payment.objects.first())
