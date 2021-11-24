@@ -799,12 +799,14 @@ When creating the required state for a given test, one can use a combination of:
 ```python
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from project.payments.selectors import items_get_for_user
 from project.payments.models import Item, Payment
 from project.payments.tasks import payment_charge
 
 
+@transaction.atomic
 def item_buy(
     *,
     item: Item,
@@ -813,13 +815,19 @@ def item_buy(
     if item in items_get_for_user(user=user):
         raise ValidationError(f'Item {item} already in {user} items.')
 
-    payment = Payment.objects.create(
+    payment = Payment(
         item=item,
         user=user,
         successful=False
     )
+    payment.full_clean()
+    payment.save()
 
-    payment_charge.delay(payment_id=payment.id)
+    # NOTE: We have to make sure that the objects is created
+    # in the DB in order to use in the Celery task
+    transaction.on_commit(
+        lambda: payment_charge.delay(payment_id=payment.id)
+    )
 
     return payment
 ```
