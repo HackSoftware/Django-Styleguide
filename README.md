@@ -2,7 +2,7 @@
 
 ---
 
-📢 **We are running a Django Styleguide Survey!** 📢
+## 📢 **We are running a Django Styleguide Survey!** 📢
 
 1. Learn more here - <https://www.hacksoft.io/blog/django-styleguide-survey> - **or simply jump to the survey here** - <https://forms.gle/G9w8q2eYoKu2arz28>.
 1. The survey takes 5 to 10 minutes to complete.
