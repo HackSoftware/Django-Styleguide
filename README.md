@@ -4,7 +4,7 @@
 
 ## 📢 **We are running a Django Styleguide Survey!** 📢
 
-1. Learn more here - <https://www.hacksoft.io/blog/django-styleguide-survey> - **or simply jump to the survey here** - <https://forms.gle/G9w8q2eYoKu2arz28>.
+1. Learn more here - <https://www.hacksoft.io/blog/django-styleguide-survey> - **or simply jump to the survey here** - <https://form.jotform.com/213492755022049>.
 1. The survey takes 5 to 10 minutes to complete.
 1. We will run the survey for 2 months and a half, until the end of February.
 1. When the survey is done, 10 participants are going to be picked at random, each of them receiving a $50 Amazon gift card.
