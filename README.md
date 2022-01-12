@@ -70,6 +70,7 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
   * [Configuration](#configuration-1)
 - [Misc](#misc)
   * [mypy / type annotations](#mypy--type-annotations)
+- [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
@@ -2285,6 +2286,20 @@ We have projects where we enforce `mypy` on CI and are very strict with types.
 We have projects where types are looser.
 
 Context is king here.
+
+## Django Styleguide in the Wild
+
+Here's a collection of different folks & companies, that have found the styleguide useful.
+
+---
+
+**Jane Doe, Senior Software Engineer at Example Corp.**
+
+> As a Django developer, I was looking for examples and style guides of how other organizations structure their code in actual projects. I found the DjangoStyleguide a few months ago.
+>
+> I integrated some of the examples in my side project. It helped me to organize some bits of my code. I want to recommend it to anyone who uses Django, and it's not sure how to structure their project or want to see a different approach. 
+
+---
 
 ## Inspiration
 
