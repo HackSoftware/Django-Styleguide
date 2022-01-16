@@ -68,8 +68,8 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
     + [Circular imports between tasks & services](#circular-imports-between-tasks--services)
   * [Periodic Tasks](#periodic-tasks)
   * [Configuration](#configuration-1)
-- [Misc](#misc)
-  * [mypy / type annotations](#mypy--type-annotations)
+- [DX (Developer Experience)](#dx-developer-experience)
+  * [`mypy` / type annotations](#mypy--type-annotations)
 - [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
 - [Inspiration](#inspiration)
 
@@ -2275,17 +2275,24 @@ Celery is a complex topic, so it's a good idea to invest time reading the docume
 
 We constantly do that & find new things or find better approaches to our problems.
 
-## Misc
+## DX (Developer Experience)
 
-### mypy / type annotations
+A section with various things that can make your Django developer life better.
 
-About type annotations & using `mypy`, [this tweet](https://twitter.com/queroumavodka/status/1294789817071542272) resonates a lot with our philosophy.
+### `mypy` / type annotations
 
-We have projects where we enforce `mypy` on CI and are very strict with types.
+When it comes to using type annotations, alongside [`mypy`](https://mypy.readthedocs.io/en/stable/index.html), [this tweet](https://twitter.com/queroumavodka/status/1294789817071542272) **resonates a lot with our philosophy.**
 
-We have projects where types are looser.
+- We have projects where we enforce `mypy` and are very strict about ot.
+- We have projects where types are looser and `mypy` is not used at all.
 
 Context is king here.
+
+In the [`Django-Styleguide-Example`](https://github.com/HackSoftware/Django-Styleguide-Example), we've configured `mypy`, using both <https://github.com/typeddjango/django-stubs> and <https://github.com/typeddjango/djangorestframework-stubs/>. You can check it as an example.
+
+Additionally, this particular project - <https://github.com/wemake-services/wemake-django-template> - also has `mypy` configuration.
+
+Figure out what is going to work best for you.
 
 ## Django Styleguide in the Wild
 
