@@ -2296,15 +2296,17 @@ Figure out what is going to work best for you.
 
 ## Django Styleguide in the Wild
 
-Here's a collection of different folks & companies, that have found the styleguide useful.
+Here's a collection of different folks & companies, that have found the styleguide useful:
 
 ---
 
-**Jane Doe, Senior Software Engineer at Example Corp.**
+**Michael Valencia, CTO at [Facturedo](https://facturedo.com/)**
 
-> As a Django developer, I was looking for examples and style guides of how other organizations structure their code in actual projects. I found the DjangoStyleguide a few months ago.
+> The source code of our core project in Facturedo started to get messy.
+> Business logic could be found in many, incoherent places. We needed a solution to structure our Django project and we found it in the Django Styleguide.
 >
-> I integrated some of the examples in my side project. It helped me to organize some bits of my code. I want to recommend it to anyone who uses Django, and it's not sure how to structure their project or want to see a different approach. 
+> We recommend it to anyone wanting to structure a medium to large-sized project.
+> It's a well defined guide that's constantly evolving.
 
 ---
 
