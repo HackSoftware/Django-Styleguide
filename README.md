@@ -112,9 +112,9 @@ Relying on generic APIs / Views, with the combination of serializers & forms doe
 1. Fragments the business logic in multiple places, making it really hard to trace the data flow.
 2. Hides things from you. In order to change something, you need to know the inner-workings of the abstraction that you are using.
 
-Generic APIs & Views, in combination with serializers & forms is really great for the straight-forward "CRUD over a model" case.
+Generic APIs & Views, in combination with serializers & forms, is really great for the straightforward "CRUD for a model" case.
 
-From our experience so far, this straightforwad case rarely happens. And once you leave the happy CRUD path, things start to get messy.
+From our experience, so far, this straightforward case rarely happens. **And once you leave the happy CRUD path, things start to get messy.**
 
 And once things start to get messy, you need more "boxes", to organize your code in a better way.
 
@@ -138,11 +138,11 @@ But trying to place all of your business logic in a custom manager is not a grea
 
 **The idea is to let your domain live separately, from your data model & API layer.**
 
-If we take the idea for having custom managers and combine that with the idea of letting the domain live saparetely, we'll end up with what we call a "service layer".
+If we take the idea for having custom queryset/managers and combine that with the idea of letting the domain live saparetely, we'll end up with what we call a "service layer".
 
-Services can be functions, classes, modules or whatever makes sense for your particular case.
+**Services can be functions, classes, modules or whatever makes sense for your particular case.**
 
-With all that in mind, custom managers & querysets are very powerful tool and should be used.
+With all that in mind, custom managers & querysets are very powerful tool and should be used to expose better interfaces for your models.
 
 ---
 
