@@ -105,7 +105,7 @@ The general idea is to "separate concerns" so those concerns can be maintainable
 
 ## Why not?
 
-> Why not put your business logic in APIs / Views / Serializers / Forms?
+> 🤔 Why not put your business logic in APIs / Views / Serializers / Forms?
 
 Relying on generic APIs / Views, with the combination of serializers & forms does 2 major things:
 
@@ -125,7 +125,7 @@ This styleguide aims to:
 
 ---
 
-> Why not put your business logic in custom managers and/or querysets?
+> 🤔 Why not put your business logic in custom managers and/or querysets?
 
 This is actually a good idea & you might introduce custom managers & querysets, that can expose better API, tailored to your domain.
 
@@ -146,7 +146,7 @@ With all that in mind, custom managers & querysets are very powerful tool and sh
 
 ---
 
-> Why not put your business logic in signals?
+> 🤔 Why not put your business logic in signals?
 
 From all of the available options, perhaps, this one will lead you to a very bad place very quickly:
 
