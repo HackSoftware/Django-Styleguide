@@ -68,6 +68,8 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
     + [Circular imports between tasks & services](#circular-imports-between-tasks--services)
   * [Periodic Tasks](#periodic-tasks)
   * [Configuration](#configuration-1)
+- [Cookbook](#cookbook)
+  * [Handling updates with a service](#handling-updates-with-a-service)
 - [DX (Developer Experience)](#dx-developer-experience)
   * [`mypy` / type annotations](#mypy--type-annotations)
 - [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
