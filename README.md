@@ -69,6 +69,8 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
     + [Circular imports between tasks & services](#circular-imports-between-tasks--services)
   * [Periodic Tasks](#periodic-tasks)
   * [Configuration](#configuration-1)
+- [Cookbook](#cookbook)
+  * [Handling updates with a service](#handling-updates-with-a-service)
 - [DX (Developer Experience)](#dx-developer-experience)
   * [`mypy` / type annotations](#mypy--type-annotations)
 - [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
@@ -2334,6 +2336,64 @@ Few key things:
 Celery is a complex topic, so it's a good idea to invest time reading the documentation & understanding the different configuration options.
 
 We constantly do that & find new things or find better approaches to our problems.
+
+## Cookbook
+
+Some of the implementations of generic reusable pieces of code are stored here.
+
+### Handling updates with a service
+
+As for updating, we have a generic update service that we use inside of the actual update services. Here's what a sample `user_update` service would look like:
+
+```python
+def user_update(*, user: User, data) -> User:
+    non_side_effect_fields = ['first_name', 'last_name']
+
+    user, has_updated = model_update(
+        instance=user,
+        fields=non_side_effect_fields,
+        data=data
+    )
+
+    # Side-effect fields update here (e.g. username is generated based on first & last name)
+
+    # ... some additional tasks with the user ...
+
+    return user
+```
+
+* We're calling the generic `model_update` service for the fields that have no side-effects related to them (meaning that they're just set to the value that we provide).
+* This pattern allows us to extract the repetitive field setting in a generic service and perform only the specific tasks inside of the update service (side-effects).
+
+The generic `model_update` implementation looks like this:
+
+```python
+def model_update(
+    *,
+    instance: DjangoModelType,
+    fields: List[str],
+    data: Dict[str, Any]
+) -> Tuple[DjangoModelType, bool]:
+    has_updated = False
+
+    for field in fields:
+        if field not in data:
+            continue
+
+        if getattr(instance, field) != data[field]:
+            has_updated = True
+            setattr(instance, field, data[field])
+
+    if has_updated:
+        instance.full_clean()
+        instance.save(update_fields=fields)
+
+    return instance, has_updated
+```
+
+The full implementations of these services can be found in our example project:
+* [`model_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/common/services.py)
+* [`user_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/users/services.py)
 
 ## DX (Developer Experience)
 
