@@ -131,18 +131,18 @@ This is actually a good idea & you might introduce custom managers & querysets, 
 
 But trying to place all of your business logic in a custom manager is not a great idea, because of the following:
 
-1. Business logic has it's own domain, which is not always directly mapped to your data model (models)
+1. Business logic has its own domain, which is not always directly mapped to your data model (models)
 1. Business logic most often spans across multiple models, so it's really hard to choose where to place something.
-    - Lets say you have a custom piece of logic that touches models `A`, `B`, `C` and `D`. Where do you put it?
+    - Let's say you have a custom piece of logic that touches models `A`, `B`, `C`, and `D`. Where do you put it?
 1. There can be additional calls to 3rd party systems. You don't want those in your custom manager methods.
 
-**The idea is to let your domain live separately, from your data model & API layer.**
+**The idea is to let your domain live separately from your data model & API layer.**
 
-If we take the idea for having custom queryset/managers and combine that with the idea of letting the domain live saparetely, we'll end up with what we call a "service layer".
+If we take the idea of having custom queryset/managers and combine that with the idea of letting the domain live separately, we'll end up with what we call a "service layer".
 
-**Services can be functions, classes, modules or whatever makes sense for your particular case.**
+**Services can be functions, classes, modules, or whatever makes sense for your particular case.**
 
-With all that in mind, custom managers & querysets are very powerful tool and should be used to expose better interfaces for your models.
+With all that in mind, custom managers & querysets are very powerful tools and should be used to expose better interfaces for your models.
 
 ---
 
