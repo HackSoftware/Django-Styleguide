@@ -424,34 +424,6 @@ As you can see, this service calls 2 other services - `profile_create` and `conf
 
 In this example, everything related to the user creation is in one place and can be traced.
 
-### Handling updates
-
-As for updating, we have a generic update service that we use inside of the actual update services. Here's what a sample `user_update` service would look like:
-
-```python
-def user_update(*, user: User, data) -> User:
-    non_side_effect_fields = ['first_name', 'last_name']
-
-    user, has_updated = model_update(
-        instance=user,
-        fields=non_side_effect_fields,
-        data=data
-    )
-
-    # Side-effect fields update here (e.g. username is generated based on first & last name)
-
-    # ... some additional tasks with the user ...
-
-    return user
-```
-
-* We're calling the generic `model_update` service for the fields that have no side-effects related to them (meaning that they're just set to the value that we provide).
-* This pattern allows us to extract the repetitive field setting in a generic service and perform only the specific tasks inside of the update service (side-effects).
-
-The generic `model_update` implementation is in the [`Cookbook` section](#generic-update-service).
-
-The full implementation of this approach can be seen [in our example project](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/users/services.py).
-
 ### Naming convention
 
 Naming convention depends on your taste. It pays off to have something consistent throughout a project.
@@ -2302,6 +2274,64 @@ Few key things:
 Celery is a complex topic, so it's a good idea to invest time reading the documentation & understanding the different configuration options.
 
 We constantly do that & find new things or find better approaches to our problems.
+
+## Cookbook
+
+Some of the implementations of generic reusable pieces of code are stored here.
+
+### Handling updates with a service
+
+As for updating, we have a generic update service that we use inside of the actual update services. Here's what a sample `user_update` service would look like:
+
+```python
+def user_update(*, user: User, data) -> User:
+    non_side_effect_fields = ['first_name', 'last_name']
+
+    user, has_updated = model_update(
+        instance=user,
+        fields=non_side_effect_fields,
+        data=data
+    )
+
+    # Side-effect fields update here (e.g. username is generated based on first & last name)
+
+    # ... some additional tasks with the user ...
+
+    return user
+```
+
+* We're calling the generic `model_update` service for the fields that have no side-effects related to them (meaning that they're just set to the value that we provide).
+* This pattern allows us to extract the repetitive field setting in a generic service and perform only the specific tasks inside of the update service (side-effects).
+
+The generic `model_update` implementation looks like this:
+
+```python
+def model_update(
+    *,
+    instance: DjangoModelType,
+    fields: List[str],
+    data: Dict[str, Any]
+) -> Tuple[DjangoModelType, bool]:
+    has_updated = False
+
+    for field in fields:
+        if field not in data:
+            continue
+
+        if getattr(instance, field) != data[field]:
+            has_updated = True
+            setattr(instance, field, data[field])
+
+    if has_updated:
+        instance.full_clean()
+        instance.save(update_fields=fields)
+
+    return instance, has_updated
+```
+
+The full implementations of these services can be found in our example project:
+* [`model_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/common/services.py)
+* [`user_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/users/services.py)
 
 ## DX (Developer Experience)
 
