@@ -808,7 +808,7 @@ def user_list(*, filters=None):
 
 As you can see, we are leveraging the powerful [`django-filter`](https://django-filter.readthedocs.io/en/stable/) library.
 
-> 👀 The key thing here is that the selector is responsible for the filtering. You can always use something else, as a filtering abstaction. For most of the cases, `django-filter` is more than enough.
+> 👀 The key thing here is that the selector is responsible for the filtering. You can always use something else, as a filtering abstraction. For most of the cases, `django-filter` is more than enough.
 
 Finally, let's look at `get_paginated_response`:
 
