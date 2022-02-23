@@ -11,15 +11,13 @@
 
 ---
 
-Django styleguide that we use in [HackSoft](https://hacksoft.io).
-
-1. We have a [`Styleguide-Example`](https://github.com/HackSoftware/Styleguide-Example) to show most of the styleguide in an actual project.
-1. You can watch Radoslav Georgiev's [Django structure for scale and longevity](https://www.youtube.com/watch?v=yG3ZdxBb1oo) for the philosophy behind the styleguide.
 
 **Table of contents:**
 
 <!-- toc -->
 
+- [What is this?](#what-is-this)
+- [How to use it?](#how-to-use-it)
 - [Overview](#overview)
 - [Why not?](#why-not)
 - [Cookie Cutter](#cookie-cutter)
@@ -78,6 +76,38 @@ Django styleguide that we use in [HackSoft](https://hacksoft.io).
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
+
+## What is this?
+
+Hello 👋
+
+This is the Django Styleguide, created by us, the folks at [HackSoft](https://hacksoft.io).
+
+**Few important notes about it:**
+
+1. It's derived from many years of experience & many Django projects, both big & small.
+1. It's pragmatic. All things mentioned here are things tested in production.
+1. It's opinionated. This is how we build applications with Django.
+1. It's not the only way. There are other ways of building & structuring Django projects that can do the job for you.
+1. We have a [`Django-Styleguide-Example`](https://github.com/HackSoftware/Styleguide-Example) to show most of the styleguide in an actual project.
+
+**You can watch Radoslav Georgiev's [Django structure for scale and longevity](https://www.youtube.com/watch?v=yG3ZdxBb1oo) for the philosophy behind the styleguide:**
+
+[![Django structure for scale and longevity by Radoslav Georgiev](https://img.youtube.com/vi/yG3ZdxBb1oo/0.jpg)](https://www.youtube.com/watch?v=yG3ZdxBb1oo)
+
+## How to use it?
+
+When it comes to the Django Styleguide, **there are 3 general ways of using it:**
+
+1. Strictly follow everything written here.
+2. Cherry-pick whatever makes sense to you, based on your specific context.
+3. Don't follow anything written here.
+
+**We recommend point number 2:**
+
+- Read the styleguide.
+- Decide what's going to work best for you.
+- Adapt for your specific case.
 
 ## Overview
 
