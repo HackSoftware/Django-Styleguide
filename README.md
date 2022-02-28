@@ -73,6 +73,7 @@
 - [DX (Developer Experience)](#dx-developer-experience)
   * [`mypy` / type annotations](#mypy--type-annotations)
 - [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
+- [Additional resources](#additional-resources)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
@@ -2496,6 +2497,12 @@ Here's a collection of different folks & companies, that have found the stylegui
 > It's a well defined guide that's constantly evolving.
 
 ---
+
+## Additional resources
+
+Additional resources that we found useful and that can add value to the styleguide.
+
+- [Dan Palmer - Scaling Django to 500 apps (DjangoCon US 2021)](https://www.youtube.com/watch?v=NsHo-kThlqI)
 
 ## Inspiration
 
