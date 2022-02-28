@@ -2495,6 +2495,13 @@ Here's a collection of different folks & companies, that have found the stylegui
 > We recommend it to anyone wanting to structure a medium to large-sized project.
 > It's a well defined guide that's constantly evolving.
 
+
+**Charanjit Singh, CTO at [Crove.app](https://crove.app/)**
+
+> The source code of our projects started to become un-maintainable, and less readable. This is not a small problem, when you're working with medium-long term projects.
+>  We recommend Django Styleguide to anyone starting/structuring a medium or large-sized project.
+>  A perfect implementation of "Boundaries" in Django (and it's continuously evolving).
+
 ---
 
 ## Inspiration
