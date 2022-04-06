@@ -27,6 +27,8 @@
   * [Methods](#methods)
   * [Testing](#testing)
 - [Services](#services)
+  * [Example - function-based service](#example---function-based-service)
+  * [Example - class-based service](#example---class-based-service)
   * [Naming convention](#naming-convention)
   * [Modules](#modules)
   * [Selectors](#selectors)
@@ -494,6 +496,8 @@ In most cases, a service can be simple function that:
 - Interacts with the database, other resources & other parts of your system.
 - Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
 
+### Example - function-based service
+
 An example service that creates a user:
 
 ```python
@@ -515,6 +519,8 @@ def user_create(
 As you can see, this service calls 2 other services - `profile_create` and `confirmation_email_send`.
 
 In this example, everything related to the user creation is in one place and can be traced.
+
+### Example - class-based service
 
 **Additionally, we can have "class-based" services**, which is a fancy way of saying - wrap the logic in a class.
 
