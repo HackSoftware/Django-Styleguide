@@ -1281,6 +1281,58 @@ urlpatterns = [
 
 **Splitting urls like that can give you the extra flexibility to move separate domain patterns to separate modules**, especially for really big projects, where you'll often have merge conflicts in `urls.py`.
 
+Now, if you like to see the entire url tree structure, you can do just that, by not extracting specific variables for the urls that you include.
+
+Here's an example from our [Django Styleguide Example](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/files/urls.py):
+
+```python
+from django.urls import path, include
+
+from styleguide_example.files.apis import (
+    FileDirectUploadApi,
+
+    FilePassThruUploadStartApi,
+    FilePassThruUploadFinishApi,
+    FilePassThruUploadLocalApi,
+)
+
+
+urlpatterns = [
+    path(
+        "upload/",
+        include(([
+            path(
+                "direct/",
+                FileDirectUploadApi.as_view(),
+                name="direct"
+            ),
+            path(
+                "pass-thru/",
+                include(([
+                    path(
+                        "start/",
+                        FilePassThruUploadStartApi.as_view(),
+                        name="start"
+                    ),
+                    path(
+                        "finish/",
+                        FilePassThruUploadFinishApi.as_view(),
+                        name="finish"
+                    ),
+                    path(
+                        "local/<str:file_id>/",
+                        FilePassThruUploadLocalApi.as_view(),
+                        name="local"
+                    )
+                ], "pass-thru"))
+            )
+        ], "upload"))
+    )
+]
+```
+
+Some people prefer the first way of doing it, others prefer the visible tree-like structure. This is up to you & your team.
+
 ## Settings
 
 When it comes to Django settings, we tend to follow the folder structure from [`cookiecutter-django`](https://github.com/cookiecutter/cookiecutter-django), with few adjustments:
