@@ -527,7 +527,10 @@ In this example, everything related to the user creation is in one place and can
 Here's an example, taken straight from the [Django Styleguide Example](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/files/services.py#L22), related to file upload:
 
 ```python
-class FileDirectUploadService:
+# https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/files/services.py
+
+
+class FileStandardUploadService:
     """
     This also serves as an example of a service class,
     which encapsulates 2 different behaviors (create & update) under a namespace.
@@ -557,6 +560,8 @@ class FileDirectUploadService:
 
     @transaction.atomic
     def create(self, file_name: str = "", file_type: str = "") -> File:
+        _validate_file_size(self.file_obj)
+
         file_name, file_type = self._infer_file_name_and_type(file_name, file_type)
 
         obj = File(
@@ -575,6 +580,8 @@ class FileDirectUploadService:
 
     @transaction.atomic
     def update(self, file: File, file_name: str = "", file_type: str = "") -> File:
+        _validate_file_size(self.file_obj)
+
         file_name, file_type = self._infer_file_name_and_type(file_name, file_type)
 
         file.file = self.file_obj
@@ -634,6 +641,70 @@ class FileAdmin(admin.ModelAdmin):
                 service.create()
         except ValidationError as exc:
             self.message_user(request, str(exc), messages.ERROR)
+```
+
+Additionally, using class-based services is a good idea for "flows" - things that go thru multiple steps.
+
+For example, this service represents a "direct file upload flow", with a `start` and `finish` (and additionally):
+
+```python
+# https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/files/services.py
+
+
+class FileDirectUploadService:
+    """
+    This also serves as an example of a service class,
+    which encapsulates a flow (start & finish) + one-off action (upload_local) into a namespace.
+
+    Meaning, we use the class here for:
+
+    1. The namespace
+    """
+    def __init__(self, user: BaseUser):
+        self.user = user
+
+    @transaction.atomic
+    def start(self, *, file_name: str, file_type: str) -> Dict[str, Any]:
+        file = File(
+            original_file_name=file_name,
+            file_name=file_generate_name(file_name),
+            file_type=file_type,
+            uploaded_by=self.user,
+            file=None
+        )
+        file.full_clean()
+        file.save()
+
+        upload_path = file_generate_upload_path(file, file.file_name)
+
+        """
+        We are doing this in order to have an associated file for the field.
+        """
+        file.file = file.file.field.attr_class(file, file.file.field, upload_path)
+        file.save()
+
+        presigned_data: Dict[str, Any] = {}
+
+        if settings.FILE_UPLOAD_STORAGE == FileUploadStorage.S3:
+            presigned_data = s3_generate_presigned_post(
+                file_path=upload_path, file_type=file.file_type
+            )
+
+        else:
+            presigned_data = {
+                "url": file_generate_local_upload_url(file_id=str(file.id)),
+            }
+
+        return {"id": file.id, **presigned_data}
+
+    @transaction.atomic
+    def finish(self, *, file: File) -> File:
+        # Potentially, check against user
+        file.upload_finished_at = timezone.now()
+        file.full_clean()
+        file.save()
+
+        return file
 ```
 
 ### Naming convention
