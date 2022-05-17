@@ -2421,9 +2421,17 @@ We use [Celery](http://www.celeryproject.org/) for the following general cases:
 
 We try to treat Celery as if it's just another interface to our core logic - meaning - **don't put business logic there.**
 
-Lets look at an example of a **service** that sends emails (example taken from `Django-Styleguide-Example`)
+Lets look at an example of a **service** that sends emails (example taken from [`Django-Styleguide-Example`](https://github.com/HackSoftware/Django-Styleguide))
 
 ```python
+from django.db import transaction
+from django.core.mail import EmailMultiAlternatives
+
+from styleguide_example.core.exceptions import ApplicationError
+from styleguide_example.common.services import model_update
+from styleguide_example.emails.models import Email
+
+
 @transaction.atomic
 def email_send(email: Email) -> Email:
     if email.status != Email.Status.SENDING:
@@ -2452,9 +2460,9 @@ def email_send(email: Email) -> Email:
     return email
 ```
 
-Email sending has business logic around it, but we still want to trigger this particular service from a task.
+Email sending has business logic around it, **but we still want to trigger this particular service from a task.**
 
-Our task would look like that:
+Our task looks like that:
 
 ```python
 from celery import shared_task
@@ -2470,7 +2478,7 @@ def email_send(email_id):
     email_send(email)
 ```
 
-As you can see, we treat the task as an API:
+As you can see, **we treat the task as an API:**
 
 1. Fetch the required data.
 2. Call the appropriate service.
@@ -2498,24 +2506,25 @@ def user_complete_onboarding(user: User) -> User:
     return user
 ```
 
-As you can see, we are importing the task (which has the same name as the service), but we are giving it the `_task` suffix.
+2 important things to point out here:
 
-And when the transaction commits, we'll call the task.
+1. We are importing the task (which has the same name as the service), but we are giving it a `_task` suffix.
+1. And when the transaction commits, we'll call the task.
 
 **So, in general, the way we use Celery can be described as:**
 
 1. Tasks call services.
 2. We import the service in the function body of the task. 
-3. When we want to trigger a task, we import the task, giving the `_task` suffix.
+3. When we want to trigger a task, we import the task, at module level, giving the `_task` suffix.
 4. We execute tasks, as a side effect, whenever our transaction commits.
 
 This way of mixing tasks & services also **prevents circular imports**, which may occurr often enough when using Celery.
 
 ### Error handling
 
-Sometimes, our service can fail and we might want to handle the error on the task level. For example - we might want to retry the task again.
+Sometimes, our service can fail and we might want to handle the error on the task level. For example - we might want to retry the task.
 
-This error handling code needs to live in the task, while also following our rules, for calling the service layer, whenever we need to interact with the core of our application.
+This error handling code needs to live in the task.
 
 Lets expand the `email_send` task example from above, by adding error handling:
 
@@ -2554,7 +2563,7 @@ def email_send(self, email_id):
 
 As you can see, we do a bunch of retries and if all of them fail, we handle this in the `on_failure` callback.
 
-The callback follows the naming pattern of `_{task_name}_failuire` and it calls the service layer.
+The callback follows the naming pattern of `_{task_name}_failuire` and it calls the service layer, just like an ordinary task.
 
 ### Configuration
 
@@ -2585,7 +2594,7 @@ Managing periodic tasks is quite important, especially when you have tens or hun
 
 We use [Celery Beat](https://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html) + `django_celery_beat.schedulers:DatabaseScheduler` + [`django-celery-beat`](https://github.com/celery/django-celery-beat) for our periodic tasks.
 
-The extra thing that we do is to have a management command, called `setup_periodic_tasks`, which holds the definition of all periodic tasks within the system. This command is located in the `tasks` app, discussed above.
+The extra thing that we do is to have a management command, called [`setup_periodic_tasks`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/tasks/management/commands/setup_periodic_tasks.py), which holds the definition of all periodic tasks within the system. This command is located in the `tasks` app, discussed above.
 
 Here's how `project.tasks.management.commands.setup_periodic_tasks.py` looks like:
 
@@ -2655,7 +2664,7 @@ Few key things:
 
 ### Beyond
 
-Celery has powerful tools to implement complex workflows ( <https://docs.celeryq.dev/en/stable/userguide/canvas.html> ).
+Celery has powerful tools to implement complex workflows - <https://docs.celeryq.dev/en/stable/userguide/canvas.html>
 
 If you decide to use them, the rules still apply.
 
