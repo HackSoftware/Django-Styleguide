@@ -254,7 +254,7 @@ We are defining the model's `clean` method, because we want to make sure we get 
 
 Now, in order for the `clean` method to be called, someone must call `full_clean` on an instance of our model, before saving.
 
-**Our recommendation is to do that in the service, right before calling clean:**
+**Our recommendation is to do that in the service, right before calling save:**
 
 ```python
 def course_create(*, name: str, start_date: date, end_date: date) -> Course:
