@@ -9,7 +9,6 @@
 
 ---
 
-
 **Table of contents:**
 
 <!-- toc -->
@@ -20,58 +19,58 @@
 - [Why not?](#why-not)
 - [Cookie Cutter](#cookie-cutter)
 - [Models](#models)
-  * [Base model](#base-model)
-  * [Validation - `clean` and `full_clean`](#validation---clean-and-full_clean)
-  * [Validation - constraints](#validation---constraints)
-  * [Properties](#properties)
-  * [Methods](#methods)
-  * [Testing](#testing)
+  - [Base model](#base-model)
+  - [Validation - `clean` and `full_clean`](#validation---clean-and-full_clean)
+  - [Validation - constraints](#validation---constraints)
+  - [Properties](#properties)
+  - [Methods](#methods)
+  - [Testing](#testing)
 - [Services](#services)
-  * [Example - function-based service](#example---function-based-service)
-  * [Example - class-based service](#example---class-based-service)
-  * [Naming convention](#naming-convention)
-  * [Modules](#modules)
-  * [Selectors](#selectors)
-  * [Testing](#testing-1)
+  - [Example - function-based service](#example---function-based-service)
+  - [Example - class-based service](#example---class-based-service)
+  - [Naming convention](#naming-convention)
+  - [Modules](#modules)
+  - [Selectors](#selectors)
+  - [Testing](#testing-1)
 - [APIs & Serializers](#apis--serializers)
-  * [Naming convention](#naming-convention-1)
-  * [Class-based vs. Function-based](#class-based-vs-function-based)
-  * [List APIs](#list-apis)
-    + [Plain](#plain)
-    + [Filters + Pagination](#filters--pagination)
-  * [Detail API](#detail-api)
-  * [Create API](#create-api)
-  * [Update API](#update-api)
-  * [Fetching objects](#fetching-objects)
-  * [Nested serializers](#nested-serializers)
-  * [Advanced serialization](#advanced-serialization)
+  - [Naming convention](#naming-convention-1)
+  - [Class-based vs. Function-based](#class-based-vs-function-based)
+  - [List APIs](#list-apis)
+    - [Plain](#plain)
+    - [Filters + Pagination](#filters--pagination)
+  - [Detail API](#detail-api)
+  - [Create API](#create-api)
+  - [Update API](#update-api)
+  - [Fetching objects](#fetching-objects)
+  - [Nested serializers](#nested-serializers)
+  - [Advanced serialization](#advanced-serialization)
 - [Urls](#urls)
 - [Settings](#settings)
-  * [Prefixing environment variables with `DJANGO_`](#prefixing-environment-variables-with-django_)
-  * [Integrations](#integrations)
-  * [Reading from `.env`](#reading-from-env)
+  - [Prefixing environment variables with `DJANGO_`](#prefixing-environment-variables-with-django_)
+  - [Integrations](#integrations)
+  - [Reading from `.env`](#reading-from-env)
 - [Errors & Exception Handling](#errors--exception-handling)
-  * [How exception handling works (in the context of DRF)](#how-exception-handling-works-in-the-context-of-drf)
-    + [DRF's `ValidationError`](#drfs-validationerror)
-    + [Django's `ValidationError`](#djangos-validationerror)
-  * [Describe how your API errors are going to look like.](#describe-how-your-api-errors-are-going-to-look-like)
-  * [Know how to change the default exception handling behavior.](#know-how-to-change-the-default-exception-handling-behavior)
-  * [Approach 1 - Use DRF's default exceptions, with very little modifications.](#approach-1---use-drfs-default-exceptions-with-very-little-modifications)
-  * [Approach 2 - HackSoft's proposed way](#approach-2---hacksofts-proposed-way)
-  * [More ideas](#more-ideas)
+  - [How exception handling works (in the context of DRF)](#how-exception-handling-works-in-the-context-of-drf)
+    - [DRF's `ValidationError`](#drfs-validationerror)
+    - [Django's `ValidationError`](#djangos-validationerror)
+  - [Describe how your API errors are going to look like.](#describe-how-your-api-errors-are-going-to-look-like)
+  - [Know how to change the default exception handling behavior.](#know-how-to-change-the-default-exception-handling-behavior)
+  - [Approach 1 - Use DRF's default exceptions, with very little modifications.](#approach-1---use-drfs-default-exceptions-with-very-little-modifications)
+  - [Approach 2 - HackSoft's proposed way](#approach-2---hacksofts-proposed-way)
+  - [More ideas](#more-ideas)
 - [Testing](#testing-2)
-  * [Naming conventions](#naming-conventions)
+  - [Naming conventions](#naming-conventions)
 - [Celery](#celery)
-  * [The basics](#the-basics)
-  * [Error handling](#error-handling)
-  * [Configuration](#configuration)
-  * [Structure](#structure)
-  * [Periodic Tasks](#periodic-tasks)
-  * [Beyond](#beyond)
+  - [The basics](#the-basics)
+  - [Error handling](#error-handling)
+  - [Configuration](#configuration)
+  - [Structure](#structure)
+  - [Periodic Tasks](#periodic-tasks)
+  - [Beyond](#beyond)
 - [Cookbook](#cookbook)
-  * [Handling updates with a service](#handling-updates-with-a-service)
+  - [Handling updates with a service](#handling-updates-with-a-service)
 - [DX (Developer Experience)](#dx-developer-experience)
-  * [`mypy` / type annotations](#mypy--type-annotations)
+  - [`mypy` / type annotations](#mypy--type-annotations)
 - [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
 - [Additional resources](#additional-resources)
 - [Inspiration](#inspiration)
@@ -116,24 +115,24 @@ The core of the Django Styleguide can be summarized as follows:
 
 **In Django, business logic should live in:**
 
-* Services - functions, that mostly take care of writing things to the database.
-* Selectors - functions, that mostly take care of fetching things from the database.
-* Model properties (with some exceptions).
-* Model `clean` method for additional validations (with some exceptions).
+- Services - functions, that mostly take care of writing things to the database.
+- Selectors - functions, that mostly take care of fetching things from the database.
+- Model properties (with some exceptions).
+- Model `clean` method for additional validations (with some exceptions).
 
 **In Django, business logic should not live in:**
 
-* APIs and Views.
-* Serializers and Forms.
-* Form tags.
-* Model `save` method.
-* Custom managers or querysets.
-* Signals.
+- APIs and Views.
+- Serializers and Forms.
+- Form tags.
+- Model `save` method.
+- Custom managers or querysets.
+- Signals.
 
 **Model properties vs selectors:**
 
-* If the property spans multiple relations, it should better be a selector.
-* If the property is non-trivial & can easily cause `N + 1` queries problem, when serialized, it should better be a selector.
+- If the property spans multiple relations, it should better be a selector.
+- If the property is non-trivial & can easily cause `N + 1` queries problem, when serialized, it should better be a selector.
 
 The general idea is to "separate concerns" so those concerns can be maintainable / testable.
 
@@ -167,7 +166,7 @@ But trying to place all of your business logic in a custom manager is not a grea
 
 1. Business logic has its own domain, which is not always directly mapped to your data model (models)
 1. Business logic most often spans across multiple models, so it's really hard to choose where to place something.
-    - Let's say you have a custom piece of logic that touches models `A`, `B`, `C`, and `D`. Where do you put it?
+   - Let's say you have a custom piece of logic that touches models `A`, `B`, `C`, and `D`. Where do you put it?
 1. There can be additional calls to 3rd party systems. You don't want those in your custom manager methods.
 
 **The idea is to let your domain live separately from your data model & API layer.**
@@ -196,9 +195,9 @@ We recommend starting every new project with some kind of cookiecutter. Having t
 
 Few examples:
 
-* You can use the [`Styleguide-Example`](https://github.com/HackSoftware/Styleguide-Example) project as a starting point.
-* You can also use [`cookiecutter-django`](https://github.com/pydanny/cookiecutter-django) since it has a ton of good stuff inside.
-* Or you can create something that works for your case & turn it into a [cookiecutter](https://cookiecutter.readthedocs.io/en/latest/) project.
+- You can use the [`Styleguide-Example`](https://github.com/HackSoftware/Styleguide-Example) project as a starting point.
+- You can also use [`cookiecutter-django`](https://github.com/pydanny/cookiecutter-django) since it has a ton of good stuff inside.
+- Or you can create something that works for your case & turn it into a [cookiecutter](https://cookiecutter.readthedocs.io/en/latest/) project.
 
 ## Models
 
@@ -310,9 +309,9 @@ This can actually be a downside to the approach, because now, we have to deal wi
 
 The Django's documentation on constraints is quite lean, so you can check the following articles by Adam Johnson, for examples of how to use them:
 
-1. [Using Django Check Constraints to Ensure Only One Field Is Set](https://adamj.eu/tech/2020/03/25/django-check-constraints-one-field-set/) 
-1. [Django’s Field Choices Don’t Constrain Your Data](https://adamj.eu/tech/2020/01/22/djangos-field-choices-dont-constrain-your-data/) 
-1. [Using Django Check Constraints to Prevent Self-Following](https://adamj.eu/tech/2021/02/26/django-check-constraints-prevent-self-following/) 
+1. [Using Django Check Constraints to Ensure Only One Field Is Set](https://adamj.eu/tech/2020/03/25/django-check-constraints-one-field-set/)
+1. [Django’s Field Choices Don’t Constrain Your Data](https://adamj.eu/tech/2020/01/22/djangos-field-choices-dont-constrain-your-data/)
+1. [Using Django Check Constraints to Prevent Self-Following](https://adamj.eu/tech/2021/02/26/django-check-constraints-prevent-self-following/)
 
 ### Properties
 
@@ -624,7 +623,7 @@ And
 @admin.register(File)
 class FileAdmin(admin.ModelAdmin):
     # ... other code here ...
-    # https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/files/admin.py 
+    # https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/files/admin.py
 
     def save_model(self, request, obj, form, change):
         try:
@@ -715,8 +714,8 @@ If we take the example above, our service is named `user_create`. The pattern is
 
 This is what we prefer in HackSoft's projects. This seems odd at first, but it has few nice features:
 
-* **Namespacing.** It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
-* **Greppability.** Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
+- **Namespacing.** It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
+- **Greppability.** Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
 
 ### Modules
 
@@ -780,12 +779,12 @@ If you decide to cover the service layer with tests, we have few general rules o
 
 When creating the required state for a given test, one can use a combination of:
 
-* Fakes (We recommend using [`faker`](https://github.com/joke2k/faker))
-* Other services, to create the required objects.
-* Special test utility & helper methods.
-* Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
-* Plain `Model.objects.create()` calls, if factories are not yet introduced in the project.
-* Usually, whatever suits you better.
+- Fakes (We recommend using [`faker`](https://github.com/joke2k/faker))
+- Other services, to create the required objects.
+- Special test utility & helper methods.
+- Factories (We recommend using [`factory_boy`](https://factoryboy.readthedocs.io/en/latest/orms.html))
+- Plain `Model.objects.create()` calls, if factories are not yet introduced in the project.
+- Usually, whatever suits you better.
 
 **Let's take a look at our service from the example:**
 
@@ -819,9 +818,9 @@ def item_buy(
 
 The service:
 
-* Calls a selector for validation.
-* Creates an object.
-* Delays a task.
+- Calls a selector for validation.
+- Creates an object.
+- Delays a task.
 
 **Those are our tests:**
 
@@ -879,31 +878,31 @@ When using services & selectors, all of your APIs should look simple & identical
 
 **When we are creating new APIs, we follow those general rules:**
 
-* Have 1 API per operation. This means, for CRUD on a model, having 4 APIs.
-* Inherit from the most simple `APIView` or `GenericAPIView`.
-  * Avoid the more abstract classes, since they tend to manage things via serializers & we want to do that via services & selectors.
-* **Don't do business logic in your API.**
-* You can do **object fetching / data manipulation in your APIs** (potentially, you can extract that to somewhere else).
-  * If you are calling `some_service` in your API, you can extract object fetching / data manipulation to `some_service_parse`.
-* Basically, keep the APIs are simple as possible. They are an interface towards your core business logic.
+- Have 1 API per operation. This means, for CRUD on a model, having 4 APIs.
+- Inherit from the most simple `APIView` or `GenericAPIView`.
+  - Avoid the more abstract classes, since they tend to manage things via serializers & we want to do that via services & selectors.
+- **Don't do business logic in your API.**
+- You can do **object fetching / data manipulation in your APIs** (potentially, you can extract that to somewhere else).
+  - If you are calling `some_service` in your API, you can extract object fetching / data manipulation to `some_service_parse`.
+- Basically, keep the APIs are simple as possible. They are an interface towards your core business logic.
 
 When we are talking about APIs, we need a way to deal with data serialization - both incoming & outgoing data.
 
 **Here are our rules for API serialization:**
 
-* There should be a dedicated **input serializer** & a dedicated **output serializer**.
-* **Input serializer** takes care of the data coming in.
-* **Output serializer** takes care of the data coming out.
-* In terms of serialization, Use whatever abstraction works for you.
+- There should be a dedicated **input serializer** & a dedicated **output serializer**.
+- **Input serializer** takes care of the data coming in.
+- **Output serializer** takes care of the data coming out.
+- In terms of serialization, Use whatever abstraction works for you.
 
 **In case you are using DRF's serializers, here are our rules:**
 
-* Serializer should be **nested in the API** and be named either `InputSerializer` or `OutputSerializer`.
-* Our preference is for both serializers to inherit from the simpler `Serializer` and avoid using `ModelSerializer`
-  * This is a matter of preference and choice. If `ModelSerializer` is working fine for you, use it.
-* If you need a nested serializer, use the `inline_serializer` util.
-* Reuse serializers as little as possible.
-  * Reusing serializers may expose you to unexpected behavior, when something changes in the base serializers.
+- Serializer should be **nested in the API** and be named either `InputSerializer` or `OutputSerializer`.
+- Our preference is for both serializers to inherit from the simpler `Serializer` and avoid using `ModelSerializer`
+  - This is a matter of preference and choice. If `ModelSerializer` is working fine for you, use it.
+- If you need a nested serializer, use the `inline_serializer` util.
+- Reuse serializers as little as possible.
+  - Reusing serializers may expose you to unexpected behavior, when something changes in the base serializers.
 
 ### Naming convention
 
@@ -923,10 +922,10 @@ We have the following preferences:
 For us, the added benefits of using classes for APIs / views are the following:
 
 1. You can inherit a `BaseApi` or add mixins.
-    - If you are using function-based APIs / views, you'll need to do the same, but with decorators.
+   - If you are using function-based APIs / views, you'll need to do the same, but with decorators.
 2. The class creates a namespace where you can nest things (attributes, methods, etc.).
-    - Additional API configuration can be done via class attributes.
-    - In the case of function-based APIs / views, you need to stack decorators.
+   - Additional API configuration can be done via class attributes.
+   - In the case of function-based APIs / views, you need to stack decorators.
 
 Here's an example with a class, inheriting a `BaseApi`:
 
@@ -975,7 +974,7 @@ class UserListApi(APIView):
         return Response(data)
 ```
 
-*Keep in mind this API is public by default. Authentication is up to you.*
+_Keep in mind this API is public by default. Authentication is up to you._
 
 #### Filters + Pagination
 
@@ -1410,8 +1409,8 @@ When it comes to Django settings, we tend to follow the folder structure from [`
 
 - We separate Django specific settings from other settings.
 - Everything should be included in `base.py`.
-    - There should be nothing that's only included in `production.py`.
-    - Things that need to only work in production are controlled via environment variables.
+  - There should be nothing that's only included in `production.py`.
+  - Things that need to only work in production are controlled via environment variables.
 
 Here's the folder structure of our [`Styleguide-Example`](https://github.com/HackSoftware/Styleguide-Example) project:
 
@@ -1441,9 +1440,9 @@ In `config/django`, we put everything that's Django related:
 - `base.py` contains most of the settings & imports everything else from `config/settings`
 - `production.py` imports from `base.py` and then overwrites some specific settings for production.
 - `test.py` imports from `base.py` and then overwrites some specific settings for running tests.
-    - This should be used as the settings module in `pytest.ini`.
+  - This should be used as the settings module in `pytest.ini`.
 - `local.py` imports from `base.py` and can overwrite some specific settings for local development.
-    - If you want to use that, point to `local` in `manage.py`. Otherwise stick with `base.py`
+  - If you want to use that, point to `local` in `manage.py`. Otherwise stick with `base.py`
 
 In `config/settings`, we put everything else:
 
@@ -1532,7 +1531,7 @@ Now you can have a `.env` (but it's not required) file in your project root & pl
 There are 2 things worth mentioning here:
 
 1. Don't put `.env` in your source control, since this will leak credentials.
-2. Rather put an `.env.example` with empty values for everything, so new developers can figure out what's being used. 
+2. Rather put an `.env.example` with empty values for everything, so new developers can figure out what's being used.
 
 ## Errors & Exception Handling
 
@@ -1580,9 +1579,7 @@ def some_service():
 The response payload is going to look like this:
 
 ```json
-[
-    "Some message"
-]
+["Some message"]
 ```
 
 This looks strange, because if we do it like this:
@@ -1599,7 +1596,7 @@ The response payload is going to look like this:
 
 ```json
 {
-    "error": "Some message"
+  "error": "Some message"
 }
 ```
 
@@ -1619,7 +1616,7 @@ The response payload is going to look like this:
 
 ```json
 {
-    "detail": "Not found."
+  "detail": "Not found."
 }
 ```
 
@@ -1711,7 +1708,7 @@ As an example, we might decide that our errors are going to look like this:
 
 ```json
 {
-    "message": "Some error message here"
+  "message": "Some error message here"
 }
 ```
 
@@ -1742,7 +1739,7 @@ We want to end up with errors, always looking like that:
 
 ```json
 {
-    "detail": "Some error"
+  "detail": "Some error"
 }
 ```
 
@@ -1750,7 +1747,7 @@ or
 
 ```json
 {
-    "detail": ["Some error", "Another error"]
+  "detail": ["Some error", "Another error"]
 }
 ```
 
@@ -1758,7 +1755,7 @@ or
 
 ```json
 {
-    "detail": {  "key": "... some arbitrary nested structure ..." }
+  "detail": { "key": "... some arbitrary nested structure ..." }
 }
 ```
 
@@ -1816,11 +1813,9 @@ Response:
 
 ```json
 {
-    "detail": {
-        "non_field_errors": [
-            "Some error message"
-        ]
-    }
+  "detail": {
+    "non_field_errors": ["Some error message"]
+  }
 }
 ```
 
@@ -1839,7 +1834,7 @@ Response:
 
 ```json
 {
-    "detail": "You do not have permission to perform this action."
+  "detail": "You do not have permission to perform this action."
 }
 ```
 
@@ -1858,7 +1853,7 @@ Response:
 
 ```json
 {
-    "detail": "Not found."
+  "detail": "Not found."
 }
 ```
 
@@ -1875,9 +1870,7 @@ Response:
 
 ```json
 {
-    "detail": [
-        "Some error message"
-    ]
+  "detail": ["Some error message"]
 }
 ```
 
@@ -1894,9 +1887,9 @@ Response:
 
 ```json
 {
-    "detail": {
-        "error": "Some error message"
-    }
+  "detail": {
+    "error": "Some error message"
+  }
 }
 ```
 
@@ -1929,20 +1922,16 @@ Response:
 
 ```json
 {
-    "detail": {
-        "foo": [
-            "This field is required."
-        ],
-        "email": [
-            "Ensure this field has at least 200 characters.",
-            "Enter a valid email address."
-        ],
-        "nested": {
-            "bar": [
-                "This field is required."
-            ]
-        }
+  "detail": {
+    "foo": ["This field is required."],
+    "email": [
+      "Ensure this field has at least 200 characters.",
+      "Enter a valid email address."
+    ],
+    "nested": {
+      "bar": ["This field is required."]
     }
+  }
 }
 ```
 
@@ -1962,7 +1951,7 @@ Response:
 
 ```json
 {
-    "detail": "Request was throttled."
+  "detail": "Request was throttled."
 }
 ```
 
@@ -1980,14 +1969,10 @@ Response:
 
 ```json
 {
-    "detail": {
-        "password": [
-            "This field cannot be blank."
-        ],
-        "email": [
-            "This field cannot be blank."
-        ]
-    }
+  "detail": {
+    "password": ["This field cannot be blank."],
+    "email": ["This field cannot be blank."]
+  }
 }
 ```
 
@@ -1999,10 +1984,10 @@ We are going to propose an approach, that can be easily extended into something 
 
 1. **Your application will have its own hierarchy of exceptions**, that are going to be thrown by the business logic.
 1. Lets say, for simplicity, that we are going to have only 1 error - `ApplicationError`.
-    - This is going to be defined in a special `core` app, within `exceptions` module. Basically, having `project.core.exceptions.ApplicationError`.
+   - This is going to be defined in a special `core` app, within `exceptions` module. Basically, having `project.core.exceptions.ApplicationError`.
 1. We want to let DRF handle everything else, by default.
 1. `ValidationError` is now special and it's going to be handled differently.
-    - `ValidationError` should only come from either serializer or a model validation.
+   - `ValidationError` should only come from either serializer or a model validation.
 
 ---
 
@@ -2010,8 +1995,8 @@ We are going to propose an approach, that can be easily extended into something 
 
 ```json
 {
-    "message": "The error message here",
-    "extra": {}
+  "message": "The error message here",
+  "extra": {}
 }
 ```
 
@@ -2021,17 +2006,13 @@ For example, whenerver we have a `ValidationError` (usually coming from a Serial
 
 ```json
 {
-    "message": "Validation error.",
-    "extra": {
-        "fields": {
-              "password": [
-                  "This field cannot be blank."
-              ],
-              "email": [
-                  "This field cannot be blank."
-              ]
-        }
-    },
+  "message": "Validation error.",
+  "extra": {
+    "fields": {
+      "password": ["This field cannot be blank."],
+      "email": ["This field cannot be blank."]
+    }
+  }
 }
 ```
 
@@ -2117,12 +2098,13 @@ Response:
 
 ```json
 {
-    "message": "Something is not correct",
-    "extra": {
-        "type": "RANDOM"
-    }
+  "message": "Something is not correct",
+  "extra": {
+    "type": "RANDOM"
+  }
 }
 ```
+
 ---
 
 Code:
@@ -2136,14 +2118,12 @@ Response:
 
 ```json
 {
-    "message": "Validation error",
-    "extra": {
-        "fields": {
-            "non_field_errors": [
-                "Some error message"
-            ]
-        }
+  "message": "Validation error",
+  "extra": {
+    "fields": {
+      "non_field_errors": ["Some error message"]
     }
+  }
 }
 ```
 
@@ -2162,8 +2142,8 @@ Response:
 
 ```json
 {
-    "message": "You do not have permission to perform this action.",
-    "extra": {}
+  "message": "You do not have permission to perform this action.",
+  "extra": {}
 }
 ```
 
@@ -2182,8 +2162,8 @@ Response:
 
 ```json
 {
-    "message": "Not found.",
-    "extra": {}
+  "message": "Not found.",
+  "extra": {}
 }
 ```
 
@@ -2200,12 +2180,10 @@ Response:
 
 ```json
 {
-    "message": "Validation error",
-    "extra": {
-        "fields": [
-            "Some error message"
-        ]
-    }
+  "message": "Validation error",
+  "extra": {
+    "fields": ["Some error message"]
+  }
 }
 ```
 
@@ -2222,12 +2200,12 @@ Response:
 
 ```json
 {
-    "message": "Validation error",
-    "extra": {
-        "fields": {
-            "error": "Some error message"
-        }
+  "message": "Validation error",
+  "extra": {
+    "fields": {
+      "error": "Some error message"
     }
+  }
 }
 ```
 
@@ -2260,23 +2238,19 @@ Response:
 
 ```json
 {
-    "message": "Validation error",
-    "extra": {
-        "fields": {
-            "foo": [
-                "This field is required."
-            ],
-            "email": [
-                "Ensure this field has at least 200 characters.",
-                "Enter a valid email address."
-            ],
-            "nested": {
-                "bar": [
-                    "This field is required."
-                ]
-            }
-        }
+  "message": "Validation error",
+  "extra": {
+    "fields": {
+      "foo": ["This field is required."],
+      "email": [
+        "Ensure this field has at least 200 characters.",
+        "Enter a valid email address."
+      ],
+      "nested": {
+        "bar": ["This field is required."]
+      }
     }
+  }
 }
 ```
 
@@ -2296,8 +2270,8 @@ Response:
 
 ```json
 {
-    "message": "Request was throttled.",
-    "extra": {}
+  "message": "Request was throttled.",
+  "extra": {}
 }
 ```
 
@@ -2315,19 +2289,16 @@ Response:
 
 ```json
 {
-    "message": "Validation error",
-    "extra": {
-        "fields": {
-            "password": [
-                "This field cannot be blank."
-            ],
-            "email": [
-                "This field cannot be blank."
-            ]
-        }
+  "message": "Validation error",
+  "extra": {
+    "fields": {
+      "password": ["This field cannot be blank."],
+      "email": ["This field cannot be blank."]
     }
+  }
 }
 ```
+
 ---
 
 Now, this can be extended & made to better suit your needs:
@@ -2375,8 +2346,8 @@ project_name
 
 We follow 2 general naming conventions:
 
-* The test file names should be `test_the_name_of_the_thing_that_is_tested.py`
-* The test case should be `class TheNameOfTheThingThatIsTestedTests(TestCase):`
+- The test file names should be `test_the_name_of_the_thing_that_is_tested.py`
+- The test case should be `class TheNameOfTheThingThatIsTestedTests(TestCase):`
 
 For example, if we have:
 
@@ -2404,8 +2375,8 @@ For example, if we have `project_name/common/utils.py`, then we are going to hav
 
 If we are to split the `utils.py` module into submodules, the same will happen for the tests:
 
-* `project_name/common/utils/files.py`
-* `project_name/common/tests/utils/test_files.py`
+- `project_name/common/utils/files.py`
+- `project_name/common/tests/utils/test_files.py`
 
 We try to match the structure of our modules with the structure of their respective tests.
 
@@ -2413,9 +2384,9 @@ We try to match the structure of our modules with the structure of their respect
 
 We use [Celery](http://www.celeryproject.org/) for the following general cases:
 
-* Communicating with 3rd party services (sending emails, notifications, etc.)
-* Offloading heavier computational tasks outside the HTTP cycle.
-* Periodic tasks (using Celery beat)
+- Communicating with 3rd party services (sending emails, notifications, etc.)
+- Offloading heavier computational tasks outside the HTTP cycle.
+- Periodic tasks (using Celery beat)
 
 ### The basics
 
@@ -2514,7 +2485,7 @@ def user_complete_onboarding(user: User) -> User:
 **So, in general, the way we use Celery can be described as:**
 
 1. Tasks call services.
-2. We import the service in the function body of the task. 
+2. We import the service in the function body of the task.
 3. When we want to trigger a task, we import the task, at module level, giving the `_task` suffix.
 4. We execute tasks, as a side effect, whenever our transaction commits.
 
@@ -2657,10 +2628,10 @@ class Command(BaseCommand):
 
 Few key things:
 
-* We use this task as part of a deploy procedure.
-* We always put a link to [`crontab.guru`](https://crontab.guru) to explain the cron. Otherwise it's unreadable.
-* Everything is in one place.
-* ⚠️ We use, almost exclusively, a cron schedule. **If you plan on using the other schedule objects, provided by Celery, please read thru their documentation** & the important notes - <https://django-celery-beat.readthedocs.io/en/latest/#example-creating-interval-based-periodic-task> - about pointing to the same schedule object. ⚠️
+- We use this task as part of a deploy procedure.
+- We always put a link to [`crontab.guru`](https://crontab.guru) to explain the cron. Otherwise it's unreadable.
+- Everything is in one place.
+- ⚠️ We use, almost exclusively, a cron schedule. **If you plan on using the other schedule objects, provided by Celery, please read thru their documentation** & the important notes - <https://django-celery-beat.readthedocs.io/en/latest/#example-creating-interval-based-periodic-task> - about pointing to the same schedule object. ⚠️
 
 ### Beyond
 
@@ -2697,8 +2668,8 @@ def user_update(*, user: User, data) -> User:
     return user
 ```
 
-* We're calling the generic `model_update` service for the fields that have no side-effects related to them (meaning that they're just set to the value that we provide).
-* This pattern allows us to extract the repetitive field setting in a generic service and perform only the specific tasks inside of the update service (side-effects).
+- We're calling the generic `model_update` service for the fields that have no side-effects related to them (meaning that they're just set to the value that we provide).
+- This pattern allows us to extract the repetitive field setting in a generic service and perform only the specific tasks inside of the update service (side-effects).
 
 The generic `model_update` implementation looks like this:
 
@@ -2727,8 +2698,9 @@ def model_update(
 ```
 
 The full implementations of these services can be found in our example project:
-* [`model_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/common/services.py)
-* [`user_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/users/services.py)
+
+- [`model_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/common/services.py)
+- [`user_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/users/services.py)
 
 ## DX (Developer Experience)
 
@@ -2775,6 +2747,6 @@ Additional resources that we found useful and that can add value to the stylegui
 
 The way we do Django is inspired by the following things:
 
-* The general idea for **separation of concerns**
-* [Boundaries by Gary Bernhardt](https://www.youtube.com/watch?v=yTkzNHF6rMs)
-* Rails service objects
+- The general idea for **separation of concerns**
+- [Boundaries by Gary Bernhardt](https://www.youtube.com/watch?v=yTkzNHF6rMs)
+- Rails service objects
