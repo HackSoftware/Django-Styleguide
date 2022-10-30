@@ -2406,7 +2406,7 @@ We try to match the structure of our modules with the structure of their respect
 
 ### Factories
 
-TODO: Add reference to blog posts and the Styleguide Example
+Factories are a great tool for generating data for your tests. If you're new to this concept, you can refer to this [blog post](https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories). We have [one more](https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories-advanced-usage) for more advanced usage and patters.
 
 ## Celery
 
