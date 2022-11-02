@@ -306,7 +306,15 @@ class Course(BaseModel):
 
 Now, if we try to create new object via `course.save()` or via `Course.objects.create(...)`, we are going to get an `IntegrityError`, rather than a `ValidationError`.
 
-This can actually be a downside to the approach, because now, we have to deal with the `IntegrityError`, which does not always have the best error message.
+This can actually be a downside (_this is not the case, starting from Django 4.1. Check the extra section below._) to the approach, because now, we have to deal with the `IntegrityError`, which does not always have the best error message.
+
+> 👀 ⚠️  👀 Since Django 4.1, calling `.full_clean` will also check model constraints!
+>
+> This actually removes the downside, mentioned above, since you'll get a nice `ValidationError`, if your model constraints fail the check (if you go thru `Model.objects.create(...)` the downside still holds)
+>
+> More on this, here - <https://docs.djangoproject.com/en/4.1/ref/models/instances/#validating-objects>
+>
+> For an example test case, check the Styleguide-Example repo - <https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/common/tests/models/test_random_model.py#L12>
 
 The Django's documentation on constraints is quite lean, so you can check the following articles by Adam Johnson, for examples of how to use them:
 
