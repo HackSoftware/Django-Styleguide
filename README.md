@@ -824,8 +824,8 @@ def item_buy(
     payment.full_clean()
     payment.save()
 
-    # NOTE: We have to make sure that the objects is created
-    # in the DB in order to use in the Celery task
+    # Run the task once the transaction has commited,
+    # guaranteeing the object has been created.
     transaction.on_commit(
         lambda: payment_charge.delay(payment_id=payment.id)
     )
@@ -876,8 +876,9 @@ class ItemBuyTests(TestCase):
         self,
         payment_charge_mock
     ):
-        user = User.objects.create_user(username='Test User')
-        item = Item.objects.create(
+        # How we prepare our tests is a topic for a different discussion
+        user = given_a_user(username="Test user")
+        item = given_a_item(
             name='Test Item',
             description='Test Item description',
             price=10.15
@@ -2406,7 +2407,15 @@ We try to match the structure of our modules with the structure of their respect
 
 ### Factories
 
-Factories are a great tool for generating data for your tests. If you're new to this concept, you can refer to this [blog post](https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories). We have [one more](https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories-advanced-usage) for more advanced usage and patters.
+Factories are a great tool for generating data for your tests.
+
+When used correctly, you can improve the overall quality of your tests.
+
+If you are new to this concept, you can refer to the following materials:
+
+- [Improve your Django tests with fakes and factories](https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories)
+- [https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories-advanced-usage](https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories-advanced-usage)
+- [DjangoCon 2022 | factory_boy: testing like a pro](https://www.youtube.com/watch?v=-C-XNHAJF-c)
 
 ## Celery
 
