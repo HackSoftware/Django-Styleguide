@@ -60,6 +60,7 @@
   - [More ideas](#more-ideas)
 - [Testing](#testing-2)
   - [Naming conventions](#naming-conventions)
+  - [Factories](#factories)
 - [Celery](#celery)
   - [The basics](#the-basics)
   - [Error handling](#error-handling)
@@ -799,12 +800,14 @@ When creating the required state for a given test, one can use a combination of:
 ```python
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from project.payments.selectors import items_get_for_user
 from project.payments.models import Item, Payment
 from project.payments.tasks import payment_charge
 
 
+@transaction.atomic
 def item_buy(
     *,
     item: Item,
@@ -813,13 +816,19 @@ def item_buy(
     if item in items_get_for_user(user=user):
         raise ValidationError(f'Item {item} already in {user} items.')
 
-    payment = Payment.objects.create(
+    payment = Payment(
         item=item,
         user=user,
         successful=False
     )
+    payment.full_clean()
+    payment.save()
 
-    payment_charge.delay(payment_id=payment.id)
+    # Run the task once the transaction has commited,
+    # guaranteeing the object has been created.
+    transaction.on_commit(
+        lambda: payment_charge.delay(payment_id=payment.id)
+    )
 
     return payment
 ```
@@ -844,33 +853,40 @@ from django_styleguide.payments.models import Payment, Item
 
 
 class ItemBuyTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username='Test User')
-        self.item = Item.objects.create(
-            name='Test Item',
-            description='Test Item description',
-            price=10.15
-        )
-
     @patch('project.payments.services.items_get_for_user')
     def test_buying_item_that_is_already_bought_fails(self, items_get_for_user_mock):
         """
         Since we already have tests for `items_get_for_user`,
         we can safely mock it here and give it a proper return value.
         """
-        items_get_for_user_mock.return_value = [self.item]
+        user = User(username='Test User')
+        item = Item(
+            name='Test Item',
+            description='Test Item description',
+            price=10.15
+        )
+
+        items_get_for_user_mock.return_value = [item]
 
         with self.assertRaises(ValidationError):
-            item_buy(user=self.user, item=self.item)
+            item_buy(user=user, item=item)
 
     @patch('project.payments.services.payment_charge.delay')
     def test_buying_item_creates_a_payment_and_calls_charge_task(
         self,
         payment_charge_mock
     ):
+        # How we prepare our tests is a topic for a different discussion
+        user = given_a_user(username="Test user")
+        item = given_a_item(
+            name='Test Item',
+            description='Test Item description',
+            price=10.15
+        )
+
         self.assertEqual(0, Payment.objects.count())
 
-        payment = item_buy(user=self.user, item=self.item)
+        payment = item_buy(user=user, item=item)
 
         self.assertEqual(1, Payment.objects.count())
         self.assertEqual(payment, Payment.objects.first())
@@ -2338,6 +2354,7 @@ project_name
 │   ├── __init__.py
 │   └── tests
 │       ├── __init__.py
+│       ├── factories.py
 │       ├── models
 │       │   └── __init__.py
 │       │   └── test_some_model_name.py
@@ -2387,6 +2404,18 @@ If we are to split the `utils.py` module into submodules, the same will happen f
 - `project_name/common/tests/utils/test_files.py`
 
 We try to match the structure of our modules with the structure of their respective tests.
+
+### Factories
+
+Factories are a great tool for generating data for your tests.
+
+When used correctly, you can improve the overall quality of your tests.
+
+If you are new to this concept, you can refer to the following materials:
+
+- [Improve your Django tests with fakes and factories](https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories)
+- [https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories-advanced-usage](https://www.hacksoft.io/blog/improve-your-tests-django-fakes-and-factories-advanced-usage)
+- [DjangoCon 2022 | factory_boy: testing like a pro](https://www.youtube.com/watch?v=-C-XNHAJF-c)
 
 ## Celery
 
