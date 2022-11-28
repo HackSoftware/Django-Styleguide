@@ -1650,7 +1650,7 @@ That's entirely different from what we saw as behavior from the `ValidationError
 So far, the default DRF behavior can get us:
 
 - An array.
-- A dictionarry.
+- A dictionary.
 - A specific `{"detail": "something"}` result.
 
 **So if we need to use the default DRF behavior, we need to take care of this inconsistency.**
@@ -1720,7 +1720,7 @@ With that, we can now have Django's `ValidationError` playing nice with DRF's ex
 
 This is very important and should be done as early as possible in any given project.
 
-This is basically agreening upon what the interface of your API errors - **How an error is going to look like as an API response?**
+This is basically agreeing upon what the interface of your API errors - **How an error is going to look like as an API response?**
 
 This is very project specific, you can use some of the popular APIs for inspiration:
 
@@ -1729,7 +1729,7 @@ This is very project specific, you can use some of the popular APIs for inspirat
 As an example, we might decide that our errors are going to look like this:
 
 1. `4**` and `5**` status codes for different types of errors.
-1. Each error will be a dictionarry with a single `message` key, containing the error message.
+1. Each error will be a dictionary with a single `message` key, containing the error message.
 
 ```json
 {
@@ -2027,7 +2027,7 @@ We are going to propose an approach, that can be easily extended into something 
 
 The `extra` key can hold arbitrary data, for the purposes of passing information to the frontend.
 
-For example, whenerver we have a `ValidationError` (usually coming from a Serializer or a Model), we are going to present the error like that:
+For example, whenever we have a `ValidationError` (usually coming from a Serializer or a Model), we are going to present the error like that:
 
 ```json
 {
@@ -2580,7 +2580,7 @@ def email_send(self, email_id):
 
 As you can see, we do a bunch of retries and if all of them fail, we handle this in the `on_failure` callback.
 
-The callback follows the naming pattern of `_{task_name}_failuire` and it calls the service layer, just like an ordinary task.
+The callback follows the naming pattern of `_{task_name}_failure` and it calls the service layer, just like an ordinary task.
 
 ### Configuration
 
