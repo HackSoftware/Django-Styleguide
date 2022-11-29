@@ -2716,37 +2716,14 @@ def user_update(*, user: User, data) -> User:
 
 - We're calling the generic `model_update` service for the fields that have no side-effects related to them (meaning that they're just set to the value that we provide).
 - This pattern allows us to extract the repetitive field setting in a generic service and perform only the specific tasks inside of the update service (side-effects).
-
-The generic `model_update` implementation looks like this:
-
-```python
-def model_update(
-    *,
-    instance: DjangoModelType,
-    fields: List[str],
-    data: Dict[str, Any]
-) -> Tuple[DjangoModelType, bool]:
-    has_updated = False
-
-    for field in fields:
-        if field not in data:
-            continue
-
-        if getattr(instance, field) != data[field]:
-            has_updated = True
-            setattr(instance, field, data[field])
-
-    if has_updated:
-        instance.full_clean()
-        instance.save(update_fields=fields)
-
-    return instance, has_updated
-```
+- We can be smart & provide the `update_fields` kwarg, when saving the instance. This way, in the `UPDATE` query, we'll only send values that are actually updated.
 
 The full implementations of these services can be found in our example project:
 
 - [`model_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/common/services.py)
 - [`user_update`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/users/services.py)
+
+If you are going to include `model_update` in your project, make sure to [read the tests](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/common/tests/services/test_model_update.py) & include them too!
 
 ## DX (Developer Experience)
 
