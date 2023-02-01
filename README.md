@@ -2733,7 +2733,7 @@ A section with various things that can make your Django developer life better.
 
 When it comes to using type annotations, alongside [`mypy`](https://mypy.readthedocs.io/en/stable/index.html), [this tweet](https://twitter.com/queroumavodka/status/1294789817071542272) **resonates a lot with our philosophy.**
 
-- We have projects where we enforce `mypy` and are very strict about ot.
+- We have projects where we enforce `mypy` and are very strict about it.
 - We have projects where types are looser and `mypy` is not used at all.
 
 Context is king here.
