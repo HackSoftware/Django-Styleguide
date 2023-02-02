@@ -1,18 +1,10 @@
 ![Django Styleguide](logo.png)
 
----
-
-## 📢 **The Django Styleguide Survey has ended. Expect results soon.** 📢
-
-1. More about it here - <https://www.hacksoft.io/blog/django-styleguide-survey>.
-1. Issue where we track the feedback - <https://github.com/HackSoftware/Django-Styleguide/issues/90>.
-
----
-
 **Table of contents:**
 
 <!-- toc -->
 
+- [How to ask a question or propose something?](#how-to-ask-a-question-or-propose-something)
 - [What is this?](#what-is-this)
 - [How to use it?](#how-to-use-it)
 - [Overview](#overview)
@@ -74,10 +66,20 @@
 - [DX (Developer Experience)](#dx-developer-experience)
   * [`mypy` / type annotations](#mypy--type-annotations)
 - [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
-- [Additional resources](#additional-resources)
+- [Additional resources / Alternatives](#additional-resources--alternatives)
 - [Inspiration](#inspiration)
 
 <!-- tocstop -->
+
+## How to ask a question or propose something?
+
+Few points to navigate yourself:
+
+1. If you've read the Django Styleguide & you have questions or suggestions, **the simplest thing you can is to open an issue.** We will respond.
+1. Even if you have a question that you are not sure if it's related to the Django Styleguide - **just open an issue anyway.** We will respond.
+1. **If you want to see a code example**, make sure to head to the [Django Styleguide Example](https://github.com/HackSoftware/Django-Styleguide-Example) repository. We treat this as a "Django test project", combining best practices & also [examples from our blog](https://www.hacksoft.io/blog).
+
+That's about it ✨
 
 ## What is this?
 
@@ -96,6 +98,10 @@ This is the Django Styleguide, created by us, the folks at [HackSoft](https://ha
 **You can watch Radoslav Georgiev's [Django structure for scale and longevity](https://www.youtube.com/watch?v=yG3ZdxBb1oo) for the philosophy behind the styleguide:**
 
 [![Django structure for scale and longevity by Radoslav Georgiev](https://img.youtube.com/vi/yG3ZdxBb1oo/0.jpg)](https://www.youtube.com/watch?v=yG3ZdxBb1oo)
+
+**You can also watch Radoslav Georgiev & Ivaylo Bachvarov's [discussion on HackCast, around the Django Styleguide](https://www.youtube.com/watch?v=9VfRaPECbpY):**
+
+[![HackCast S02E08 - Django Community & Django Styleguide](https://img.youtube.com/vi/9VfRaPECbpY/0.jpg)](https://www.youtube.com/watch?v=9VfRaPECbpY)
 
 ## How to use it?
 
@@ -2760,11 +2766,13 @@ Here's a collection of different folks & companies, that have found the stylegui
 
 ---
 
-## Additional resources
+## Additional resources / Alternatives
 
-Additional resources that we found useful and that can add value to the styleguide.
+Additional resources & other alternatives that we found useful and that can add value to the styleguide.
 
 - [Dan Palmer - Scaling Django to 500 apps (DjangoCon US 2021)](https://www.youtube.com/watch?v=NsHo-kThlqI)
+- [Django API Domains](https://phalt.github.io/django-api-domains/)
+- [A YC News discussion around the Django Styleguide](https://news.ycombinator.com/item?id=34337667) - you can potentially find additional useful things here.
 
 ## Inspiration
 
