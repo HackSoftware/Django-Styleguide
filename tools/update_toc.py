@@ -4,7 +4,7 @@ from subprocess import check_output
 
 def get_new_toc():
     new_toc = check_output(
-        'markdown-toc README.md',
+        'node_modules/.bin/markdown-toc README.md',
         shell=True
     ).decode('utf-8')
 
