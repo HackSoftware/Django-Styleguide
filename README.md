@@ -1,3 +1,7 @@
+# Django Styleguide
+
+> Need help with your Django project? [HackSoft](https://www.hacksoft.io/) can make it easy for you. Reach out at `consulting@hacksoft.io`
+
 ![Django Styleguide](logo.png)
 
 **Table of contents:**
