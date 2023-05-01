@@ -2741,10 +2741,14 @@ A section with various things that can make your Django developer life better.
 
 ### `mypy` / type annotations
 
-When it comes to using type annotations, alongside [`mypy`](https://mypy.readthedocs.io/en/stable/index.html), [this tweet](https://twitter.com/queroumavodka/status/1294789817071542272) **resonates a lot with our philosophy.**
+When it comes to [`mypy`](https://mypy.readthedocs.io/en/stable/index.html), we have the following philosophy:
 
-- We have projects where we enforce `mypy` and are very strict about it.
-- We have projects where types are looser and `mypy` is not used at all.
+> Use it, if it makes sense for you & helps you produce better software.
+
+In HackSoft, we have:
+
+- Projects where we enforce `mypy` and are very strict about it.
+- Projects where types are more loose and `mypy` is not used at all.
 
 Context is king here.
 
