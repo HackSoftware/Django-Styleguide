@@ -1,6 +1,6 @@
 # Django Styleguide
 
-> 👀 **Need help with your Django project?** [HackSoft](https://www.hacksoft.io/) can make it easy for you. Reach out at `consulting@hacksoft.io`
+> 👀 **Need help with your Django project?** [HackSoft is here for you](https://www.hacksoft.io/solutions/django?utm_source=django-styleguide&utm_medium=web&utm_campaign=Django-Campaign). Reach out at `consulting@hacksoft.io`
 
 ![Django Styleguide](logo.png)
 
