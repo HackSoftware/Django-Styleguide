@@ -1587,6 +1587,8 @@ That's why we'll split things into two - **general guidelines**, followed by som
 1. Use DRF's default exceptions, with very little modifications.
 1. HackSoft's proposed approach.
 
+If you are looking for a standard way to structure your error responses, **check RFC7807** - <https://datatracker.ietf.org/doc/html/rfc7807> (as proposed here - <https://github.com/HackSoftware/Django-Styleguide/issues/133>)
+
 ### How exception handling works (in the context of DRF)
 
 DRF has an excellent guide on how exceptions are being handled, so make sure to read it first - <https://www.django-rest-framework.org/api-guide/exceptions/>
