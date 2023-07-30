@@ -919,7 +919,7 @@ When using services & selectors, all of your APIs should look simple & identical
 - **Don't do business logic in your API.**
 - You can do **object fetching / data manipulation in your APIs** (potentially, you can extract that to somewhere else).
   - If you are calling `some_service` in your API, you can extract object fetching / data manipulation to `some_service_parse`.
-- Basically, keep the APIs are simple as possible. They are an interface towards your core business logic.
+- Basically, keep the APIs as simple as possible. They are an interface towards your core business logic.
 
 When we are talking about APIs, we need a way to deal with data serialization - both incoming & outgoing data.
 
