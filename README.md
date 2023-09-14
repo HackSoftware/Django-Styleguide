@@ -1218,7 +1218,7 @@ class CourseUpdateApi(SomeAuthenticationMixin, APIView):
         start_date = serializers.DateField(required=False)
         end_date = serializers.DateField(required=False)
 
-    def post(self, request, course_id):
+    def put(self, request, course_id):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
