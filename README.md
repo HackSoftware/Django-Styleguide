@@ -710,9 +710,9 @@ So we will follow the following naming convention in our service layer here at S
 - Class-based service should be named in this pattern `ObjectService`, if this object has a few domains that requires services, it should be named in this pattern instead `ObjectDomainService`.
 - The actual function services inside the class should be named in this pattern `action`.
 
-If you tak a look on the example above you will get a better grasp. In the example we have `FileDirectUploadService` service class and inside it the `start` and `finish` function services.
+If you take a look at the example above you will get a better grasp. In the example we have the `FileDirectUploadService` service class and inside it the `start` and `finish` function services.
 
-This is what we prefer in Shahry's projects asit has a nice feature:
+This is what we prefer in Shahry's projects as it has a nice feature:
 
 - **Namespacing.** It's easy to spot all services inside the `UserService` class and it's a good idea to put them in a `users.py` module if the `UserSerivce` class gets big enough.
 
