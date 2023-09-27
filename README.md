@@ -22,7 +22,6 @@
   * [Methods](#methods)
   * [Testing](#testing)
 - [Services](#services)
-  * [Example - function-based service](#example---function-based-service)
   * [Example - class-based service](#example---class-based-service)
   * [Naming convention](#naming-convention)
   * [Modules](#modules)
@@ -502,46 +501,21 @@ Here's a very simple diagram, positioning the service layer in our Django apps:
 
 A service can be:
 
-- A simple function.
+- A simple function. (At Shahry we won't be using them at all)
 - A class.
-- An entire module.
-- Whatever makes sense in your case.
+- An entire module when a class-based service gets big for an object gets big enough, or an object has a few domains that require services classes.
 
-In most cases, a service can be simple function that:
+In most cases, a service can be a simple function that:
 
-- Lives in `<your_app>/services.py` module.
-- Takes keyword-only arguments, unless it requires no or one argument.
+- Lives in `<your_app>/services.py` module under its object service class.
+- Takes keyword-only arguments, even if it requires one argument.
 - Is type-annotated (even if you are not using [`mypy`](https://github.com/python/mypy) at the moment).
 - Interacts with the database, other resources & other parts of your system.
 - Does business logic - from simple model creation to complex cross-cutting concerns, to calling external services & tasks.
 
-### Example - function-based service
-
-An example service that creates a user:
-
-```python
-def user_create(
-    *,
-    email: str,
-    name: str
-) -> User:
-    user = User(email=email)
-    user.full_clean()
-    user.save()
-
-    profile_create(user=user, name=name)
-    confirmation_email_send(user=user)
-
-    return user
-```
-
-As you can see, this service calls 2 other services - `profile_create` and `confirmation_email_send`.
-
-In this example, everything related to the user creation is in one place and can be traced.
-
 ### Example - class-based service
 
-**Additionally, we can have "class-based" services**, which is a fancy way of saying - wrap the logic in a class.
+**Additionally, we can have "class-based" services**, which is a fancy way of saying - wrap the logic in a class, which will always be the case in our code base.
 
 Here's an example, taken straight from the [Django Styleguide Example](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/files/services.py#L22), related to file upload:
 
@@ -728,22 +702,26 @@ class FileDirectUploadService:
 
 ### Naming convention
 
-Naming convention depends on your taste. It pays off to have something consistent throughout a project.
+The naming convention depends on your taste. It pays off to have something consistent throughout a project. 
 
-If we take the example above, our service is named `user_create`. The pattern is - `<entity>_<action>`.
+So we will follow the following naming convention in our service layer here at Shahry:
 
-This is what we prefer in HackSoft's projects. This seems odd at first, but it has few nice features:
+- Class-based service should be named in this pattern `ObjectService`, if this object has a few domains that requires services, it should be named in this pattern instead `ObjectDomainService`.
+- The actual function services inside the class should be named in this pattern `action`.
 
-- **Namespacing.** It's easy to spot all services starting with `user_` and it's a good idea to put them in a `users.py` module.
-- **Greppability.** Or in other words, if you want to see all actions for a specific entity, just grep for `user_`.
+If you take a look at the example above you will get a better grasp. In the example we have the `FileDirectUploadService` service class and inside it the `start` and `finish` function services.
+
+This is what we prefer in Shahry's projects as it has a nice feature:
+
+- **Namespacing.** It's easy to spot all services inside the `UserService` class and it's a good idea to put them in a `users.py` module if the `UserSerivce` class gets big enough.
 
 ### Modules
 
-If you have a simple-enough Django app with a bunch of services, they can all live happily in the `service.py` module.
+If you have a simple enough Django app with a bunch of services, they can all live happily in the `service.py` module.
 
 But when things get big, you might want to split `services.py` into a folder with sub-modules, depending on the different sub-domains that you are dealing with in your app.
 
-For example, lets say we have an `authentication` app, where we have 1 sub-module in our `services` module, that deals with `jwt`, and one sub-module that deals with `oauth`.
+For example, let's say we have an `authentication` app, where we have 1 sub-module in our `services` module, that deals with `jwt`, and one sub-module that deals with `oauth`.
 
 The structure may look like this:
 
@@ -754,11 +732,10 @@ services
 └── oauth.py
 ```
 
-There are lots of flavors here:
+There are lots of flavors here, but we will stick to this structure:
 
 - You can do the import-export dance in `services/__init__.py`, so you can import from `project.authentication.services` everywhere else
-- You can create a folder-module, `jwt/__init__.py`, and put the code there.
-- Basically, the structure is up to you. If you feel it's time to restructure and refactor - do so.
+
 
 ### Selectors
 
@@ -770,20 +747,25 @@ In most of our projects, we distinguish between "Pushing data to the database" a
 
 > If this idea does not resonate well with you, you can just have services for both "kinds" of operations.
 
-A selector follows the same rules as a service.
+A selector follows the same rules as a service, as it is a sub-layer of services. Except for that they live in `<your_app>/selectors.py` and their name ends with `Selector` instead of `Service`.
 
 For example, in a module `<your_app>/selectors.py`, we can have the following:
 
 ```python
-def user_list(*, fetched_by: User) -> Iterable[User]:
-    user_ids = user_get_visible_for(user=fetched_by)
+Class UserSelector:
+
+def __init__(self, fetched_by: User):
+    self.fetched_by = fetched_by
+
+def list(self) -> Iterable[User]:
+    user_ids = self.get_visible_for(user=self.fetched_by)
 
     query = Q(id__in=user_ids)
 
     return User.objects.filter(query)
 ```
 
-As you can see, `user_get_visible_for` is another selector.
+As you can see, `get_visible_for` is another selector inside the `UserSelector` class.
 
 You can return querysets, or lists or whatever makes sense to your specific case.
 
