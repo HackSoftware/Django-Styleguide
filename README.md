@@ -503,10 +503,9 @@ A service can be:
 
 - A simple function. (At Shahry we won't be using them at all)
 - A class.
-- An entire module.
-- Whatever makes sense in your case.
+- An entire module when a class-based service gets big for an object gets big enough, or an object has a few domains that require services classes.
 
-In most cases, a service can be simple function that:
+In most cases, a service can be a simple function that:
 
 - Lives in `<your_app>/services.py` module under its object service class.
 - Takes keyword-only arguments, even if it requires one argument.
