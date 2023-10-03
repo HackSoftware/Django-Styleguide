@@ -68,6 +68,7 @@
   * [Handling updates with a service](#handling-updates-with-a-service)
 - [DX (Developer Experience)](#dx-developer-experience)
   * [`mypy` / type annotations](#mypy--type-annotations)
+- [Logging](#how-to-log)
 - [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
 - [Additional resources / Alternatives](#additional-resources--alternatives)
 - [Inspiration](#inspiration)
