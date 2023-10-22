@@ -2450,7 +2450,7 @@ We use [Celery](http://www.celeryproject.org/) for the following general cases:
 
 We try to treat Celery as if it's just another interface to our core logic - meaning - **don't put business logic there.**
 
-Lets look at an example of a **service** that sends emails (example taken from [`Django-Styleguide-Example`](https://github.com/HackSoftware/Django-Styleguide-Example))
+Lets look at an example of a **service** that sends emails (example taken from [`Django-Styleguide-Example`](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/emails/tasks.py))
 
 ```python
 from django.db import transaction
