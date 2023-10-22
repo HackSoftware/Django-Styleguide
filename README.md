@@ -97,7 +97,7 @@ This is the Django Styleguide, created by us, the folks at [HackSoft](https://ha
 1. It's pragmatic. All things mentioned here are things tested in production.
 1. It's opinionated. This is how we build applications with Django.
 1. It's not the only way. There are other ways of building & structuring Django projects that can do the job for you.
-1. We have a [`Django-Styleguide-Example`](https://github.com/HackSoftware/Styleguide-Example) to show most of the styleguide in an actual project.
+1. We have a [`Django-Styleguide-Example`](https://github.com/HackSoftware/Django-Styleguide-Example) to show most of the styleguide in an actual project.
 
 **You can watch Radoslav Georgiev's [Django structure for scale and longevity](https://www.youtube.com/watch?v=yG3ZdxBb1oo) for the philosophy behind the styleguide:**
 
@@ -2450,7 +2450,7 @@ We use [Celery](http://www.celeryproject.org/) for the following general cases:
 
 We try to treat Celery as if it's just another interface to our core logic - meaning - **don't put business logic there.**
 
-Lets look at an example of a **service** that sends emails (example taken from [`Django-Styleguide-Example`](https://github.com/HackSoftware/Django-Styleguide))
+Lets look at an example of a **service** that sends emails (example taken from [`Django-Styleguide-Example`](https://github.com/HackSoftware/Django-Styleguide-Example))
 
 ```python
 from django.db import transaction
