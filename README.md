@@ -1269,7 +1269,7 @@ class Serializer(serializers.Serializer):
     })
 ```
 
-The implementation of `inline_serializer` can be found [here](https://github.com/HackSoftware/Styleguide-Example/blob/master/styleguide_example/common/utils.py#L34), in the [Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example) repo.
+The implementation of `inline_serializer` can be found [here](https://github.com/HackSoftware/Django-Styleguide-Example/blob/master/styleguide_example/api/utils.py), in the [Styleguide-Example](https://github.com/HackSoftware/Styleguide-Example) repo.
 
 ### Advanced serialization
 
