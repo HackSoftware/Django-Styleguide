@@ -68,6 +68,7 @@
   * [Handling updates with a service](#handling-updates-with-a-service)
 - [DX (Developer Experience)](#dx-developer-experience)
   * [`mypy` / type annotations](#mypy--type-annotations)
+- [Logging](#how-to-log)
 - [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
 - [Additional resources / Alternatives](#additional-resources--alternatives)
 - [Inspiration](#inspiration)
@@ -2741,6 +2742,163 @@ In the [`Django-Styleguide-Example`](https://github.com/HackSoftware/Django-Styl
 Additionally, this particular project - <https://github.com/wemake-services/wemake-django-template> - also has `mypy` configuration.
 
 Figure out what is going to work best for you.
+
+# How to log
+
+## Levels
+
+A log level or log severity is a piece of information telling how important a given log message is:
+
+DEBUG: should be used for information that may be needed for diagnosing issues and troubleshooting or when running application in the test environment for the purpose of making sure everything is running correctly
+
+INFO: should be used as standard log level, indicating that something happened
+
+ERROR: We should use this within a try and except block to log our own error with information on the parameters supplied to the function
+
+EXCEPTION: we should use this to properly log an exception in a try and except block.
+
+```python
+import logging
+
+logger = logging.get_logger(__name__)
+
+def my_view(request):
+    logger.info("invoked=my_view, status=STARTED")
+    logger.info("invoked=my_view, status=DONE")
+
+    logger.debug("invoked=my_view, status=STARTED")
+    logger.debug("invoked=my_view, status=DONE")
+
+    logger.warn("invoked=my_view, status=STARTED")
+    logger.warn("invoked=my_view, status=DONE")
+    
+    logger.error("invoked=my_view, status=STARTED")
+    logger.error("invoked=my_view, status=DONE")
+
+    logger.exception(exception)
+    logger.exception(exception)
+```
+
+In this example, we created a logger named "shahry.views". We then used the logger to log messages with different log levels: info, debug, warning, error, and critical.
+
+Best Practices for Logging in Django
+
+Follow these best practices to ensure effective and secure logging in your Django application:
+
+Create loggers using the logging.getLogger() factory function. This allows the logging library to manage the mapping of names to instances and maintain a hierarchy of logs.
+
+Different logger names
+
+Specify appropriate log levels to prevent flooding of log files with trivial information.
+
+Avoid logging sensitive information like passwords, authorization tokens, personally identifiable information (PII), and credit card numbers.
+
+Create meaningful log messages for easy understanding of logged events.
+
+Always save results before logging the “DONE“ log then return it after.
+
+## Logging in a View
+
+```python
+from django.http import HttpResponse
+import logging
+
+logger = logging.get_logger(__name__)
+def my_view(request):
+    logger.info("invoked=my_view, status=STARTED")
+    # Your view code here
+    logger.info("invoked=my_view, status=DONE")
+    return HttpResponse('Hello, World!')
+
+Logging in a Service
+
+import logging
+
+logger = logging.get_logger(__name__)
+
+def my_service(user_id, data):
+    logger.info(f"invoked=my_service, status=STARTED, user_id={user_id}, data={data}")
+    # Your service code here
+    logger.info(f"invoked=my_service, status=DONE, user_id={user_id}, data={data}")
+    return result
+```
+
+## Logging in a Util
+
+```python
+import logging
+
+logger = logging.get_logger(__name__)
+
+def my_util(user_id, data):
+    logger.info(f"invoked=my_util, status=STARTED, user_id={user_id}, data={data}")
+    # Your util code here
+    logger.info(f"invoked=my_util, status=DONE, user_id={user_id}, data={data}")
+    return result
+
+Logging in a Model Function
+
+from django.db import models
+import logging
+
+logger = logging.get_logger(__name__)
+
+class MyModel(models.Model):
+    # Your model fields here
+
+    def my_model_function(self):
+        logger.info(f"invoked=my_model_function, status=STARTED, id={self.id}")
+        # Your model function code here
+        logger.info(f"invoked=my_model_function, status=DONE, id={self.id}")
+        return result
+```
+
+## Logging in a celery task
+
+```python
+from django.db import models
+import logging
+
+logger = logging.get_logger(__name__)
+
+@shared_task
+def celery_task():
+  logger.info(f"task=celery_task, status=STARTED")
+  # results should be set here
+  logger.info(f"task=celery_task, status=DONE, results={results}")
+```
+
+## Logging an error
+```python
+from django.db import models
+import logging
+
+logger = logging.get_logger(__name__)
+
+def my_function(self, userId):
+  logger.info(f"fun=my_function status=STARTED id={userId}")
+  
+  # Try and except around logic that may result in error
+  try:
+    # Logic here
+  except Exception as exc:
+    logger.error(f"function=my_function, status=ERROR, id={userId}, error={exc}")
+    logger.exception(exc)
+  
+  logger.info(f"fun=my_function, status=DONE, id={userId}")
+  return result
+```
+
+## Logging in the admin
+```python
+    @admin.display(description="Branches")
+    def get_branches(self, obj):
+        logger.info(f"admin_function=get_branches, status=STARTED, merchant_id={obj.id}")
+        branches = list(obj.branches.all().values_list("name", flat=True))
+        result = ", ".join(branches)
+        logger.info(f"admin_function=get_branches, status=DONE, merchant_id={obj.id}")
+        return result
+```
 
 ## Django Styleguide in the Wild
 
