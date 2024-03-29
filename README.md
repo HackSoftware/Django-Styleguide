@@ -117,7 +117,7 @@ When it comes to the Django Styleguide, **there are 3 general ways of using it:*
 
 **We recommend point number 2:**
 
-- Read the styleguide.Комфортная работа в редакторе + вменяемый внешний вид.
+- Read the styleguide.
 - Decide what's going to work best for you.
 - Adapt for your specific case.
 
