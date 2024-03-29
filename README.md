@@ -117,7 +117,7 @@ When it comes to the Django Styleguide, **there are 3 general ways of using it:*
 
 **We recommend point number 2:**
 
-- Read the styleguide.
+- Read the styleguide.Комфортная работа в редакторе + вменяемый внешний вид.
 - Decide what's going to work best for you.
 - Adapt for your specific case.
 
@@ -562,16 +562,11 @@ class FileStandardUploadService:
         self.file_obj = file_obj
 
     def _infer_file_name_and_type(self, file_name: str = "", file_type: str = "") -> Tuple[str, str]:
-        if not file_name:
-            file_name = self.file_obj.name
+        file_name = file_name or self.file_obj.name
 
         if not file_type:
             guessed_file_type, encoding = mimetypes.guess_type(file_name)
-
-            if guessed_file_type is None:
-                file_type = ""
-            else:
-                file_type = guessed_file_type
+            file_type = guessed_file_type or ""
 
         return file_name, file_type
 
@@ -851,7 +846,7 @@ The service:
 **Those are our tests:**
 
 ```python
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -863,7 +858,9 @@ from django_styleguide.payments.models import Payment, Item
 
 class ItemBuyTests(TestCase):
     @patch('project.payments.services.items_get_for_user')
-    def test_buying_item_that_is_already_bought_fails(self, items_get_for_user_mock):
+    def test_buying_item_that_is_already_bought_fails(
+        self, items_get_for_user_mock: Mock
+    ):
         """
         Since we already have tests for `items_get_for_user`,
         we can safely mock it here and give it a proper return value.
@@ -883,7 +880,7 @@ class ItemBuyTests(TestCase):
     @patch('project.payments.services.payment_charge.delay')
     def test_buying_item_creates_a_payment_and_calls_charge_task(
         self,
-        payment_charge_mock
+        payment_charge_mock: Mock
     ):
         # How we prepare our tests is a topic for a different discussion
         user = given_a_user(username="Test user")
@@ -902,7 +899,7 @@ class ItemBuyTests(TestCase):
 
         self.assertFalse(payment.successful)
 
-        payment_charge_mock.assert_called()
+        payment_charge_mock.assert_called_once()
 ```
 
 ## APIs & Serializers
