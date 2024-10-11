@@ -1590,7 +1590,7 @@ If you are looking for a standard way to structure your error responses, **check
 
 DRF has an excellent guide on how exceptions are being handled, so make sure to read it first - <https://www.django-rest-framework.org/api-guide/exceptions/>
 
-Additonally, here's a neat diadgram with an overview of the process:
+Additionally, here's a neat diagram with an overview of the process:
 
 ![Exception handler (1)](https://user-images.githubusercontent.com/387867/142426205-2c0356e6-ce20-425e-a811-072c3334edb0.png)
 
