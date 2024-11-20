@@ -2375,13 +2375,13 @@ project_name
 │       ├── factories.py
 │       ├── models
 │       │   └── __init__.py
-│       │   └── test_some_model_name.py
+│       │   └── some_model_name_test.py
 │       ├── selectors
 │       │   └── __init__.py
-│       │   └── test_some_selector_name.py
+│       │   └── some_selector_name_test.py
 │       └── services
 │           ├── __init__.py
-│           └── test_some_service_name.py
+│           └── some_service_name_test.py
 └── __init__.py
 ```
 
@@ -2389,7 +2389,7 @@ project_name
 
 We follow 2 general naming conventions:
 
-- The test file names should be `test_the_name_of_the_thing_that_is_tested.py`
+- The test file names should be `the_name_of_the_thing_that_is_tested_test.py`
 - The test case should be `class TheNameOfTheThingThatIsTestedTests(TestCase):`
 
 For example, if we have:
@@ -2402,7 +2402,7 @@ def a_very_neat_service(*args, **kwargs):
 We are going to have the following for file name:
 
 ```
-project_name/app_name/tests/services/test_a_very_neat_service.py
+project_name/app_name/tests/services/a_very_neat_service_test.py
 ```
 
 And the following for test case:
@@ -2414,12 +2414,12 @@ class AVeryNeatServiceTests(TestCase):
 
 For tests of utility functions, we follow a similar pattern.
 
-For example, if we have `project_name/common/utils.py`, then we are going to have `project_name/common/tests/test_utils.py` and place different test cases in that file.
+For example, if we have `project_name/common/utils.py`, then we are going to have `project_name/common/tests/utils_test.py` and place different test cases in that file.
 
 If we are to split the `utils.py` module into submodules, the same will happen for the tests:
 
 - `project_name/common/utils/files.py`
-- `project_name/common/tests/utils/test_files.py`
+- `project_name/common/tests/utils/files_test.py`
 
 We try to match the structure of our modules with the structure of their respective tests.
 
