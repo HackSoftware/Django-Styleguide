@@ -655,7 +655,7 @@ class FileAdmin(admin.ModelAdmin):
             self.message_user(request, str(exc), messages.ERROR)
 ```
 
-Additionally, using class-based services is a good idea for "flows" - things that go thru multiple steps.
+Additionally, using class-based services is a good idea for "flows" - things that go through multiple steps.
 
 For example, this service represents a "direct file upload flow", with a `start` and `finish` (and additionally):
 
