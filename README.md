@@ -293,7 +293,7 @@ This also plays well with Django admin, because the forms used there will trigge
 
 As proposed in [this issue](https://github.com/HackSoftware/Django-Styleguide/issues/22), if you can do validation using [Django's constraints](https://docs.djangoproject.com/en/dev/ref/models/constraints/), then you should aim for that.
 
-Less code to write, less to code to maintain, the database will take care of the data even if it's being inserted from a different place.
+Less code to write, less code to maintain, the database will take care of the data even if it's being inserted from a different place.
 
 Lets look at an example!
 
