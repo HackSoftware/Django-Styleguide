@@ -168,6 +168,12 @@ This styleguide aims to:
 1. Give you those "boxes".
 1. Help you figure out your own "boxes", for your own specific context & needs.
 
+Additionally, thanks to this comment - https://github.com/HackSoftware/Django-Styleguide/issues/170 - there's one additional way of looking at this:
+
+The way your app should behave (or as we call it - "business logic") should not be related to the way you interface with it (be it an API, a management command or something else) and this is a very clear line, where we want to separate our concerns.
+
+Of course, there are cases, where things can get intertwined, yet, a good baseline for thinking about this separation is - "core" vs. "interface".
+
 ---
 
 > 🤔 Why not put your business logic in custom managers and/or querysets?
