@@ -1,0 +1,71 @@
+# Django Styleguide Documentation Index
+
+This is a documentation index for the Django Styleguide, providing links to key sections and concepts.
+
+## Core Concepts
+
+- Overview and Philosophy
+  https://github.com/HackSoftware/Django-Styleguide#overview
+
+- Models
+  https://github.com/HackSoftware/Django-Styleguide#models
+  - Base Model: https://github.com/HackSoftware/Django-Styleguide#base-model
+  - Validation: https://github.com/HackSoftware/Django-Styleguide#validation---clean-and-full_clean
+  - Properties: https://github.com/HackSoftware/Django-Styleguide#properties
+  - Methods: https://github.com/HackSoftware/Django-Styleguide#methods
+
+- Services
+  https://github.com/HackSoftware/Django-Styleguide#services
+  - Function-based Services: https://github.com/HackSoftware/Django-Styleguide#example---function-based-service
+  - Class-based Services: https://github.com/HackSoftware/Django-Styleguide#example---class-based-service
+  - Naming Conventions: https://github.com/HackSoftware/Django-Styleguide#naming-convention
+  - Modules: https://github.com/HackSoftware/Django-Styleguide#modules
+
+- APIs & Serializers
+  https://github.com/HackSoftware/Django-Styleguide#apis--serializers
+  - List APIs: https://github.com/HackSoftware/Django-Styleguide#list-apis
+  - Detail API: https://github.com/HackSoftware/Django-Styleguide#detail-api
+  - Create API: https://github.com/HackSoftware/Django-Styleguide#create-api
+  - Update API: https://github.com/HackSoftware/Django-Styleguide#update-api
+
+## Project Structure
+
+- Settings
+  https://github.com/HackSoftware/Django-Styleguide#settings
+  - Environment Variables: https://github.com/HackSoftware/Django-Styleguide#prefixing-environment-variables-with-django_
+  - Integrations: https://github.com/HackSoftware/Django-Styleguide#integrations
+
+- URLs
+  https://github.com/HackSoftware/Django-Styleguide#urls
+
+## Advanced Topics
+
+- Error Handling
+  https://github.com/HackSoftware/Django-Styleguide#errors--exception-handling
+  - Exception Handling Overview: https://github.com/HackSoftware/Django-Styleguide#how-exception-handling-works-in-the-context-of-drf
+  - HackSoft's Approach: https://github.com/HackSoftware/Django-Styleguide#approach-2---hacksofts-proposed-way
+
+- Testing
+  https://github.com/HackSoftware/Django-Styleguide#testing
+  - Overview: https://github.com/HackSoftware/Django-Styleguide#overview-1
+  - Naming Conventions: https://github.com/HackSoftware/Django-Styleguide#naming-conventions
+  - Factories: https://github.com/HackSoftware/Django-Styleguide#factories
+
+- Celery Integration
+  https://github.com/HackSoftware/Django-Styleguide#celery
+  - Basics: https://github.com/HackSoftware/Django-Styleguide#the-basics
+  - Error Handling: https://github.com/HackSoftware/Django-Styleguide#error-handling
+  - Periodic Tasks: https://github.com/HackSoftware/Django-Styleguide#periodic-tasks
+
+## Developer Experience
+
+- Type Annotations & mypy
+  https://github.com/HackSoftware/Django-Styleguide#mypy--type-annotations
+
+## Examples & Resources
+
+- Django Styleguide Example Project
+  https://github.com/HackSoftware/Django-Styleguide-Example
+
+- Additional Resources
+  https://github.com/HackSoftware/Django-Styleguide#additional-resources--alternatives 

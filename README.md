@@ -69,6 +69,8 @@
   - [Handling updates with a service](#handling-updates-with-a-service)
 - [DX (Developer Experience)](#dx-developer-experience)
   - [`mypy` / type annotations](#mypy--type-annotations)
+  - [MCP Documentation Server](#mcp-documentation-server)
+    - [Setting up MCP Documentation Server](#setting-up-mcp-documentation-server)
 - [Django Styleguide in the Wild](#django-styleguide-in-the-wild)
 - [Additional resources / Alternatives](#additional-resources--alternatives)
 - [Inspiration](#inspiration)
@@ -334,7 +336,7 @@ This can actually be a downside (_this is not the case, starting from Django 4.1
 The Django's documentation on constraints is quite lean, so you can check the following articles by Adam Johnson, for examples of how to use them:
 
 1. [Using Django Check Constraints to Ensure Only One Field Is Set](https://adamj.eu/tech/2020/03/25/django-check-constraints-one-field-set/)
-1. [Django’s Field Choices Don’t Constrain Your Data](https://adamj.eu/tech/2020/01/22/djangos-field-choices-dont-constrain-your-data/)
+1. [Django's Field Choices Don't Constrain Your Data](https://adamj.eu/tech/2020/01/22/djangos-field-choices-dont-constrain-your-data/)
 1. [Using Django Check Constraints to Prevent Self-Following](https://adamj.eu/tech/2021/02/26/django-check-constraints-prevent-self-following/)
 
 ### Properties
@@ -2762,6 +2764,14 @@ In the [`Django-Styleguide-Example`](https://github.com/HackSoftware/Django-Styl
 Additionally, this particular project - <https://github.com/wemake-services/wemake-django-template> - also has `mypy` configuration.
 
 Figure out what is going to work best for you.
+
+### MCP Documentation Server
+
+To enhance the developer experience when working with the Django Styleguide, we provide an MCP (Machine Context Protocol) documentation server that integrates with various IDEs like Cursor, Windsurf, and Claude.
+
+This allows you to get contextual help and documentation while working with the Django Styleguide directly in your IDE.
+
+For setup instructions, see [Setting up MCP Documentation Server](tools/setup_mpc.md).
 
 ## Django Styleguide in the Wild
 
